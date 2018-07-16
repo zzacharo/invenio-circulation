@@ -18,6 +18,7 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'isort>=4.3.3',
+    'mock>=1.3.0',
     'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
@@ -29,11 +30,22 @@ extras_require = {
     'docs': [
         'Sphinx>=1.5.1',
     ],
+    'mysql': [
+        'invenio-db[mysql,versioning]>=1.0.0b3',
+    ],
+    'postgresql': [
+        'invenio-db[postgresql,versioning]>=1.0.0b3',
+    ],
+    'sqlite': [
+        'invenio-db[versioning]>=1.0.0b3',
+    ],
     'tests': tests_require,
 }
 
 extras_require['all'] = []
-for reqs in extras_require.values():
+for name, reqs in extras_require.items():
+    if name in ('mysql', 'postgresql', 'sqlite'):
+        continue
     extras_require['all'].extend(reqs)
 
 setup_requires = [
@@ -43,6 +55,9 @@ setup_requires = [
 
 install_requires = [
     'Flask-BabelEx>=0.9.2',
+    'transitions>=0.6.8',
+    'invenio-db>=1.0.0',
+    'invenio-records>=1.0.0'
 ]
 
 packages = find_packages()
