@@ -22,49 +22,18 @@ try:
 except ImportError:
     DIAGRAM_ENABLED = False
 
-STATES = ['CREATED', 'PENDING', 'ITEM_ON_LOAN', 'ITEM_RETURNED',
-          'ITEM_IN_TRANSIT', 'ITEM_AT_DESK']
-
-TRANSITIONS = [{
-    'trigger': 'request',
-    'source': 'CREATED',
-    'dest': 'PENDING',
-    'before': 'set_request_parameters'
-}, {
-    'trigger': 'validate_request',
-    'source': 'PENDING',
-    'dest': 'ITEM_IN_TRANSIT',
-    'before': 'set_parameters',
-    'unless': 'is_pickup_at_same_library'
-}, {
-    'trigger': 'validate_request',
-    'source': 'PENDING',
-    'dest': 'ITEM_AT_DESK',
-    'before': 'set_parameters',
-    'conditions': 'is_pickup_at_same_library'
-}, {
-    'trigger': 'checkout',
-    'source': 'CREATED',
-    'dest': 'ITEM_ON_LOAN',
-    'before': 'set_parameters',
-    'conditions': 'is_checkout_valid'
-}, {
-    'trigger': 'checkin',
-    'source': 'ITEM_ON_LOAN',
-    'dest': 'ITEM_RETURNED',
-    'before': 'set_parameters'
-}]
-
 
 class Loan(Record):
     """Loan record class."""
 
     def __init__(self, data, model=None):
         """."""
-        data.setdefault('state', STATES[0])
+        self.states = current_app.config['CIRCULATION_LOAN_STATES']
+        self.transitions = current_app.config['CIRCULATION_LOAN_TRANSITIONS']
+        data.setdefault('state', self.states[0])
         super(Loan, self).__init__(data, model)
-        Machine(model=self, states=STATES, send_event=True,
-                transitions=TRANSITIONS,
+        Machine(model=self, states=self.states, send_event=True,
+                transitions=self.transitions,
                 initial=self['state'],
                 finalize_event='save')
 
@@ -118,8 +87,8 @@ class Loan(Record):
             warnings.warn('dependency not found, please install pygraphviz to '
                           'export the circulation state diagram.')
             return False
-        m = GraphMachine(states=STATES, transitions=TRANSITIONS,
-                         initial=STATES[0], show_conditions=True,
+        m = GraphMachine(states=self.states, transitions=self.transitions,
+                         initial=self.states[0], show_conditions=True,
                          title='Circulation State Diagram')
         m.get_graph().draw(output_file, prog='dot')
         return True

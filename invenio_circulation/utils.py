@@ -29,3 +29,6 @@ def is_checkout_valid(transaction_user_pid,
     if not end_date:
         end_date = start_date + timedelta(days=30)
     return (start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+
+
+
