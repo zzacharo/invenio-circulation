@@ -27,7 +27,7 @@ def test_api_get_loan(app, db, json_headers):
     assert minted_loan.pid_value == loan_pid.pid_value
 
     with app.test_client() as client:
-        url = url_for('invenio_records_rest.loanid_item',
+        url = url_for('invenio_records_rest.loan_pid_item',
                       pid_value=loan_pid.pid_value)
         res = client.get(url, headers=json_headers)
         assert res.status_code == 200

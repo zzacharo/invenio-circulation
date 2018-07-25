@@ -19,53 +19,52 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'isort>=4.3.3',
+    'invenio-jsonschemas>=1.0.0',
     'mock>=1.3.0',
     'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
-    'pytest>=2.8.0',
+    'pytest>=3.3.0',
 ]
 
 invenio_search_version = '1.0.1'
 invenio_db_version = '1.0.2'
 
 extras_require = {
+    'elasticsearch2': [
+        'invenio-search[elasticsearch2]>={}'.format(invenio_search_version)
+    ],
     'elasticsearch5': [
-        'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
+        'invenio-search[elasticsearch5]>={}'.format(invenio_search_version)
     ],
     'elasticsearch6': [
-        'invenio-search[elasticsearch6]>={}'.format(invenio_search_version),
+        'invenio-search[elasticsearch6]>={}'.format(invenio_search_version)
     ],
-    'docs': [
-        'Sphinx>=1.5.1',
-    ],
-    'mysql': [
-        'invenio-db[mysql,versioning]>={}'.format(invenio_db_version),
-    ],
+    'docs': ['Sphinx>=1.5.1'],
+    'mysql': ['invenio-db[mysql,versioning]>={}'.format(invenio_db_version)],
     'postgresql': [
-        'invenio-db[postgresql,versioning]>={}'.format(invenio_db_version),
+        'invenio-db[postgresql,versioning]>={}'.format(invenio_db_version)
     ],
-    'sqlite': [
-        'invenio-db[versioning]>={}'.format(invenio_db_version),
-    ],
-    'pygraphviz': [
-        'pygraphviz>=1.3.1'
-    ],
-    'tests': tests_require
+    'sqlite': ['invenio-db[versioning]>={}'.format(invenio_db_version)],
+    'pygraphviz': ['pygraphviz>=1.3.1'],
+    'tests': tests_require,
 }
 
 extras_require['all'] = []
 for name, reqs in extras_require.items():
-    if name in ('mysql', 'postgresql', 'sqlite', 'elasticsearch5',
-                'elasticsearch6'):
+    if name in (
+        'mysql',
+        'postgresql',
+        'sqlite',
+        'elasticsearch2',
+        'elasticsearch5',
+        'elasticsearch6',
+    ):
         continue
     extras_require['all'].extend(reqs)
 
-setup_requires = [
-    'Babel>=1.3',
-    'pytest-runner>=2.6.2',
-]
+setup_requires = ['Babel>=1.3', 'pytest-runner>=2.6.2']
 
 install_requires = [
     'Flask-BabelEx>=0.9.3',
@@ -74,7 +73,8 @@ install_requires = [
     'invenio-pidstore>=1.0.0',
     'invenio-records>=1.0.0',
     'invenio-records-rest>=1.1.2',
-    'invenio-rest>=1.0.0'
+    'invenio-rest>=1.0.0',
+    'invenio-jsonschemas>=1.0.0',
 ]
 
 packages = find_packages()
@@ -102,20 +102,22 @@ setup(
     platforms='any',
     entry_points={
         'flask.commands': [
-            'circulation = invenio_circulation.cli:circulation',
+            'circulation = invenio_circulation.cli:circulation'
         ],
         'invenio_base.apps': [
-            'invenio_circulation = invenio_circulation:InvenioCirculation',
+            'invenio_circulation = invenio_circulation:InvenioCirculation'
         ],
-        'invenio_i18n.translations': [
-            'messages = invenio_circulation',
-        ],
+        'invenio_i18n.translations': ['messages = invenio_circulation'],
         'invenio_pidstore.fetchers': [
-            'circ_loanid = invenio_circulation.pid.fetchers:loanid_fetcher',
+            'circ_loanid = invenio_circulation.pid.fetchers:loanid_fetcher'
         ],
         'invenio_pidstore.minters': [
-            'circ_loanid = invenio_circulation.pid.minters:loanid_minter',
+            'circ_loanid = invenio_circulation.pid.minters:loanid_minter'
         ],
+        'invenio_jsonschemas.schemas': [
+            'loans = invenio_circulation.schemas'
+        ],
+        'invenio_search.mappings': ['loans = invenio_circulation.mappings'],
     },
     extras_require=extras_require,
     install_requires=install_requires,

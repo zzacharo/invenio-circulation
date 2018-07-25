@@ -27,7 +27,9 @@ STATES = [
     'PENDING',
     'ITEM_ON_LOAN',
     'ITEM_RETURNED',
-    'ITEM_IN_TRANSIT',
+    'ITEM_IN_TRANSIT',  # TODO: remove this state and its json schema reference
+    'ITEM_IN_TRANSIT_FOR_PICKUP',
+    'ITEM_IN_TRANSIT_TO_HOUSE',
     'ITEM_AT_DESK',
 ]
 

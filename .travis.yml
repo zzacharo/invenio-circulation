@@ -20,13 +20,21 @@ cache:
   - pip
 
 env:
+  global:
+    - ES2_DOWNLOAD_URL="https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.4.2/elasticsearch-2.4.2.tar.gz"
+    - ES5_DOWNLOAD_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.4.tar.gz"
+    - ES6_DOWNLOAD_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.0.tar.gz"
+    - ES_HOST=127.0.0.1
   matrix:
-    - REQUIREMENTS=lowest EXTRAS=all,sqlite,elasticsearch5
-    - REQUIREMENTS=lowest EXTRAS=all,sqlite,elasticsearch6
-    - REQUIREMENTS=release EXTRAS=all,sqlite,elasticsearch5 DEPLOY=true
-    - REQUIREMENTS=release EXTRAS=all,sqlite,elasticsearch6
-    - REQUIREMENTS=devel EXTRAS=all,sqlite,elasticsearch5
-    - REQUIREMENTS=devel EXTRAS=all,sqlite,elasticsearch6
+    - REQUIREMENTS=lowest EXTRAS=all,sqlite,elasticsearch2 ES_URL=$ES2_DOWNLOAD_URL
+    - REQUIREMENTS=lowest EXTRAS=all,sqlite,elasticsearch5 ES_URL=$ES5_DOWNLOAD_URL
+    - REQUIREMENTS=lowest EXTRAS=all,sqlite,elasticsearch6 ES_URL=$ES6_DOWNLOAD_URL
+    - REQUIREMENTS=release EXTRAS=all,sqlite,elasticsearch2 ES_URL=$ES2_DOWNLOAD_URL
+    - REQUIREMENTS=release EXTRAS=all,sqlite,elasticsearch5 ES_URL=$ES5_DOWNLOAD_URL DEPLOY=true
+    - REQUIREMENTS=release EXTRAS=all,sqlite,elasticsearch6 ES_URL=$ES6_DOWNLOAD_URL
+    - REQUIREMENTS=devel EXTRAS=all,sqlite,elasticsearch2 ES_URL=$ES2_DOWNLOAD_URL
+    - REQUIREMENTS=devel EXTRAS=all,sqlite,elasticsearch5 ES_URL=$ES5_DOWNLOAD_URL
+    - REQUIREMENTS=devel EXTRAS=all,sqlite,elasticsearch6 ES_URL=$ES6_DOWNLOAD_URL
 
 python:
   - "2.7"
@@ -38,6 +46,10 @@ addons:
       - graphviz
 
 before_install:
+  - "mkdir /tmp/elasticsearch"
+  - "wget -O - $ES_URL | tar xz --directory=/tmp/elasticsearch --strip-components=1"
+  - "/tmp/elasticsearch/bin/elasticsearch &"
+  - "sleep 20"
   - "nvm install 6; nvm use 6"
   - "travis_retry pip install --upgrade pip setuptools py"
   - "travis_retry pip install twine wheel coveralls requirements-builder"

@@ -29,17 +29,17 @@ CIRCULATION_POLICIES = dict(
 )
 """."""
 
-_CIRCULATION_LOAN_PID_TYPE = 'loanid'
+_CIRCULATION_LOAN_PID_TYPE = 'loan_pid'
 """."""
 
-_CIRCULATION_LOAN_MINTER = 'circ_loanid'
+_CIRCULATION_LOAN_MINTER = 'loan_pid'
 """."""
 
-_CIRCULATION_LOAN_FETCHER = 'circ_loanid'
+_CIRCULATION_LOAN_FETCHER = 'loan_pid'
 """."""
 
 CIRCULATION_REST_ENDPOINTS = dict(
-    loanid=dict(
+    loan_pid=dict(
         pid_type=_CIRCULATION_LOAN_PID_TYPE,
         pid_minter=_CIRCULATION_LOAN_MINTER,
         pid_fetcher=_CIRCULATION_LOAN_FETCHER,
@@ -56,7 +56,7 @@ CIRCULATION_REST_ENDPOINTS = dict(
                                  ':json_v1_search'),
         },
         list_route='/circulation/loan/',
-        item_route='/circulation/loan/<pid(loanid):pid_value>',
+        item_route='/circulation/loan/<pid(loan_pid):pid_value>',
         default_media_type='application/json',
         max_result_window=10000,
         error_handlers=dict(),

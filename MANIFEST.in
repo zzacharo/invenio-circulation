@@ -33,3 +33,7 @@ recursive-include docs Makefile
 recursive-include examples *.py
 recursive-include examples *.sh
 recursive-include tests *.py
+recursive-include invenio_circulation *.json
+
+# added by check_manifest.py
+recursive-include tests *.json

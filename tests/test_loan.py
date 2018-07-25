@@ -127,3 +127,8 @@ def test_conditional_request(loan, app, db, params):
     loan.request(**params)
     assert loan.state == 'PENDING'
     loan['pickup_location_pid'] == 'custom_pickup_location_pid'
+
+
+def test_indexed_loans(indexed_loans):
+    """Test mappings, index creation and loans indexing."""
+    assert indexed_loans

@@ -1,0 +1,59 @@
+{
+  "mappings": {
+    "loan-v1.0.0": {
+      "date_detection": false,
+      "numeric_detection": false,
+      "properties": {
+        "$schema": {
+          "type": "keyword"
+        },
+        "loan_pid": {
+          "type": "keyword"
+        },
+        "transaction_date": {
+          "type":   "date",
+          "format": "yyyy-MM-dd"
+        },
+        "patron_pid": {
+          "type": "keyword"
+        },
+        "document_pid": {
+          "type": "keyword"
+        },
+        "item_pid": {
+          "type": "keyword"
+        },
+        "end_date": {
+          "type":   "date",
+          "format": "yyyy-MM-dd"
+        },
+        "state": {
+          "type": "keyword"
+        },
+        "start_date": {
+          "type":   "date",
+          "format": "yyyy-MM-dd"
+        },
+        "request_expire_date": {
+          "type":   "date",
+          "format": "yyyy-MM-dd"
+        },
+        "pickup_location_pid": {
+          "type": "keyword"
+        },
+        "transaction_location_pid": {
+          "type": "keyword"
+        },
+        "transaction_user_pid": {
+          "type": "keyword"
+        },
+        "_created": {
+          "type": "date"
+        },
+        "_updated": {
+          "type": "date"
+        }
+      }
+    }
+  }
+}
