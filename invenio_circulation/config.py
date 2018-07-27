@@ -9,6 +9,7 @@
 """Invenio module for the circulation of bibliographic items."""
 
 from .api import Loan
+from .links import loan_links_factory
 from .transitions.transitions import ItemOnLoanToItemInTransitHouse, \
     ItemOnLoanToItemReturned, PendingToItemAtDesk, \
     PendingToItemInTransitPickup
@@ -24,7 +25,15 @@ _CIRCULATION_LOAN_MINTER = 'loan_pid'
 _CIRCULATION_LOAN_FETCHER = 'loan_pid'
 """."""
 
+_Loan_PID = 'pid(loan_pid,record_class="invenio_circulation.api:Loan")'
+"""."""
+
+_CIRCULATION_ACTION_LINKS_FACTORY = loan_links_factory
+"""."""
+
+
 CIRCULATION_STATES_ITEM_AVAILABLE = ['ITEM_RETURNED']
+"""."""
 
 CIRCULATION_LOAN_TRANSITIONS = {
     'CREATED': [
@@ -88,8 +97,8 @@ CIRCULATION_REST_ENDPOINTS = dict(
         pid_fetcher=_CIRCULATION_LOAN_FETCHER,
         # search_class=RecordsSearch,
         # indexer_class=RecordIndexer,
-        search_index=None,
-        search_type=None,
+        # search_index=None,
+        # search_type=None,
         record_class=Loan,
         record_serializers={
             'application/json': ('invenio_records_rest.serializers'
@@ -100,8 +109,9 @@ CIRCULATION_REST_ENDPOINTS = dict(
                                  ':json_v1_search'),
         },
         list_route='/circulation/loan/',
-        item_route='/circulation/loan/<pid(loan_pid):pid_value>',
+        item_route='/circulation/loan/<{0}:pid_value>'.format(_Loan_PID),
         default_media_type='application/json',
+        links_factory_imp=_CIRCULATION_ACTION_LINKS_FACTORY,
         max_result_window=10000,
         error_handlers=dict(),
     ),

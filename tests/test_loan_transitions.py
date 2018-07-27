@@ -95,7 +95,6 @@ def test_validate_item_in_transit_for_pickup(loan_created, app, db, params):
     app.config[
         'CIRCULATION_ITEM_LOCATION_RETRIEVER'
     ] = lambda x: 'external_location_pid'
-    # import ipdb;ipdb.set_trace()
     loan = current_circulation.circulation.trigger(loan,
                                                    **dict(params))
     assert loan['state'] == 'ITEM_IN_TRANSIT_FOR_PICKUP'

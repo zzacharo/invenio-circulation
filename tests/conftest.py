@@ -112,11 +112,11 @@ def app(base_app):
     InvenioRecordsREST(base_app)
     InvenioPIDStore(base_app)
     InvenioIndexer(base_app)
-    InvenioPIDStore(base_app)
     InvenioSearch(base_app)
-    InvenioCirculation(base_app)
     InvenioJSONSchemas(base_app)
+    InvenioCirculation(base_app)
     base_app.register_blueprint(create_blueprint_from_app(base_app))
+
     with base_app.app_context():
         yield base_app
 

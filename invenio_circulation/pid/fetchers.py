@@ -13,7 +13,7 @@ from invenio_pidstore.fetchers import FetchedPID
 from ..config import _CIRCULATION_LOAN_PID_TYPE
 
 
-def loanid_fetcher(record_uuid, data):
+def loan_pid_fetcher(record_uuid, data):
     """Fetch PID from loan record."""
     return FetchedPID(
         provider=None,

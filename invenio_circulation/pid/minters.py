@@ -12,7 +12,7 @@ from ..config import _CIRCULATION_LOAN_PID_TYPE
 from .providers import CirculationLoanIdProvider
 
 
-def loanid_minter(record_uuid, data):
+def loan_pid_minter(record_uuid, data):
     """Mint loan identifiers."""
     assert _CIRCULATION_LOAN_PID_TYPE not in data
     provider = CirculationLoanIdProvider.create(

@@ -19,16 +19,3 @@ def test_version():
     """Test version import."""
     from invenio_circulation import __version__
     assert __version__
-
-
-def test_init():
-    """Test extension initialization."""
-    app = Flask('testapp')
-    InvenioCirculation(app)
-    assert 'invenio-circulation' in app.extensions
-
-    app = Flask('testapp')
-    ext = InvenioCirculation()
-    assert 'invenio-circulation' not in app.extensions
-    ext.init_app(app)
-    assert 'invenio-circulation' in app.extensions
