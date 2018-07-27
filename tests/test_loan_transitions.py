@@ -19,7 +19,7 @@ def test_loan_checkout_checkin(loan_created, app, db, params):
     """Test loan checkout and checkin."""
     assert loan_created['state'] == 'CREATED'
 
-    loan = current_circulation.circulation.to_next(
+    loan = current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger='checkout')
     )
     db.session.commit()
@@ -28,7 +28,7 @@ def test_loan_checkout_checkin(loan_created, app, db, params):
     # set same transaction location to avoid "in transit"
     app.config['CIRCULATION_ITEM_LOCATION_RETRIEVER'] = \
         lambda x: params['transaction_location_pid']
-    loan = current_circulation.circulation.to_next(loan, **dict(params))
+    loan = current_circulation.circulation.trigger(loan, **dict(params))
     db.session.commit()
     assert loan['state'] == 'ITEM_RETURNED'
 
@@ -38,7 +38,7 @@ def test_loan_request(app, db, params):
     loan = Loan.create({})
     assert loan['state'] == 'CREATED'
 
-    loan = current_circulation.circulation.to_next(
+    loan = current_circulation.circulation.trigger(
         loan, **dict(params,
                      trigger='request',
                      pickup_location_pid='pickup_location_pid')
@@ -50,7 +50,7 @@ def test_loan_request(app, db, params):
 @pytest.mark.skip(reason="Add duration policy in checkout")
 def test_storing_loan_parameters(loan_created, app, db, params):
     """."""
-    loan = current_circulation.circulation.to_next(
+    loan = current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger='checkout')
     )
     db.session.commit()
@@ -63,12 +63,12 @@ def test_storing_loan_parameters(loan_created, app, db, params):
 
 def test_cancel_action(loan_created, app, db, params):
     """Test should pass when calling `cancel` from `ITEM_ON_LOAN`."""
-    loan = current_circulation.circulation.to_next(
+    loan = current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger='checkout')
     )
     db.session.commit()
 
-    current_circulation.circulation.to_next(
+    current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger='cancel')
     )
     assert loan['state'] == 'CANCELLED'
@@ -77,14 +77,14 @@ def test_cancel_action(loan_created, app, db, params):
 def test_cancel_fail(loan_created, app, params):
     """Test should fail when calling `cancel` from `CREATED`."""
     with pytest.raises(NoValidTransitionAvailable):
-        current_circulation.circulation.to_next(
+        current_circulation.circulation.trigger(
             loan_created, **dict(params, trigger='cancel')
         )
 
 
 def test_validate_item_in_transit_for_pickup(loan_created, app, db, params):
     """."""
-    loan = current_circulation.circulation.to_next(
+    loan = current_circulation.circulation.trigger(
         loan_created, **dict(params,
                              trigger='request',
                              pickup_location_pid='pickup_location_pid')
@@ -95,15 +95,14 @@ def test_validate_item_in_transit_for_pickup(loan_created, app, db, params):
     app.config[
         'CIRCULATION_ITEM_LOCATION_RETRIEVER'
     ] = lambda x: 'external_location_pid'
-    # import ipdb;ipdb.set_trace()
-    loan = current_circulation.circulation.to_next(loan,
+    loan = current_circulation.circulation.trigger(loan,
                                                    **dict(params))
     assert loan['state'] == 'ITEM_IN_TRANSIT_FOR_PICKUP'
 
 
 def test_validate_item_at_desk(loan_created, app, db, params):
     """."""
-    loan = current_circulation.circulation.to_next(
+    loan = current_circulation.circulation.trigger(
         loan_created, **dict(params,
                              trigger='request',
                              pickup_location_pid='pickup_location_pid')
@@ -114,7 +113,7 @@ def test_validate_item_at_desk(loan_created, app, db, params):
     app.config[
         'CIRCULATION_ITEM_LOCATION_RETRIEVER'
     ] = lambda x: 'pickup_location_pid'
-    loan = current_circulation.circulation.to_next(loan_created,
+    loan = current_circulation.circulation.trigger(loan_created,
                                                    **dict(params))
     db.session.commit()
     assert loan['state'] == 'ITEM_AT_DESK'

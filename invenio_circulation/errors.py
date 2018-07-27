@@ -31,3 +31,7 @@ class NoValidTransitionAvailable(CirculationException):
 
 class TransitionPermissionsFailed(CirculationException):
     """."""
+
+
+class LoanActionError(CirculationException):
+    """."""
