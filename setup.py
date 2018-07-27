@@ -111,10 +111,10 @@ setup(
         ],
         'invenio_i18n.translations': ['messages = invenio_circulation'],
         'invenio_pidstore.fetchers': [
-            'circ_loanid = invenio_circulation.pid.fetchers:loanid_fetcher'
+            'loan_pid = invenio_circulation.pid.fetchers:loan_pid_fetcher'
         ],
         'invenio_pidstore.minters': [
-            'circ_loanid = invenio_circulation.pid.minters:loanid_minter'
+            'loan_pid = invenio_circulation.pid.minters:loan_pid_minter'
         ],
         'invenio_jsonschemas.schemas': [
             'loans = invenio_circulation.schemas'

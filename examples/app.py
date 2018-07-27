@@ -60,7 +60,7 @@ from invenio_search.ext import InvenioSearch
 from invenio_circulation.api import Loan
 from invenio_circulation.config import CIRCULATION_REST_ENDPOINTS
 from invenio_circulation.ext import InvenioCirculation
-from invenio_circulation.pid.minters import loanid_minter
+from invenio_circulation.pid.minters import loan_pid_minter
 
 # Create Flask application
 app = Flask(__name__)
@@ -93,6 +93,6 @@ def fixtures():
 def loans():
     """Load test data fixture."""
     loan = Loan.create({})
-    pid = loanid_minter(loan.id, loan)
+    pid = loan_pid_minter(loan.id, loan)
     db.session.commit()
     click.secho('Loan #{} created.'.format(pid.pid_value), fg='green')
