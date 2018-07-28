@@ -10,11 +10,13 @@
 
 from .api import Loan
 from .links import loan_links_factory
-from .transitions.transitions import ItemOnLoanToItemInTransitHouse, \
+from .transitions.transitions import CreatedToItemOnLoan, CreatedToPending, \
+    ItemAtDeskToItemOnLoan, ItemOnLoanToItemInTransitHouse, \
     ItemOnLoanToItemReturned, PendingToItemAtDesk, \
     PendingToItemInTransitPickup
-from .utils import is_checkin_valid, is_checkout_valid, is_item_available, \
-    is_request_valid, is_request_validate_valid, item_location_retriever
+from .utils import get_default_loan_duration, is_item_available, \
+    is_loan_duration_valid, item_exists, item_location_retriever, \
+    patron_exists
 
 _CIRCULATION_LOAN_PID_TYPE = 'loan_pid'
 """."""
@@ -37,8 +39,9 @@ CIRCULATION_STATES_ITEM_AVAILABLE = ['ITEM_RETURNED']
 
 CIRCULATION_LOAN_TRANSITIONS = {
     'CREATED': [
-        dict(dest='PENDING', trigger='request'),
-        dict(dest='ITEM_ON_LOAN', trigger='checkout')
+        dict(dest='PENDING', trigger='request', transition=CreatedToPending),
+        dict(dest='ITEM_ON_LOAN', trigger='checkout',
+             transition=CreatedToItemOnLoan)
     ],
     'PENDING': [
         dict(dest='ITEM_AT_DESK', transition=PendingToItemAtDesk),
@@ -47,7 +50,7 @@ CIRCULATION_LOAN_TRANSITIONS = {
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_AT_DESK': [
-        dict(dest='ITEM_ON_LOAN'),
+        dict(dest='ITEM_ON_LOAN', transition=ItemAtDeskToItemOnLoan),
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_IN_TRANSIT_FOR_PICKUP': [
@@ -72,21 +75,21 @@ CIRCULATION_LOAN_TRANSITIONS = {
 CIRCULATION_LOAN_INITIAL_STATE = 'CREATED'
 """."""
 
+CIRCULATION_PATRON_EXISTS = patron_exists
+"""."""
+
+CIRCULATION_ITEM_EXISTS = item_exists
+"""."""
+
 CIRCULATION_ITEM_LOCATION_RETRIEVER = item_location_retriever
 """."""
 
-CIRCULATION_DEFAULT_REQUEST_DURATION = 30
-"""."""
-
-CIRCULATION_DEFAULT_LOAN_DURATION = 30
-"""."""
-
 CIRCULATION_POLICIES = dict(
-    checkout=is_checkout_valid,
-    checkin=is_checkin_valid,
-    request=is_request_valid,
-    validate_request=is_request_validate_valid,
-    item_available=is_item_available
+    checkout=dict(
+        duration_default=get_default_loan_duration,
+        duration_validate=is_loan_duration_valid,
+        item_available=is_item_available
+    ),
 )
 """."""
 

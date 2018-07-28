@@ -10,27 +10,11 @@
 
 from flask import current_app
 
-from ..api import get_pending_loans_for_item
 
-
-def is_pickup_at_same_library(item_pid, pickup_location_pid):
-    """."""
-    item_location_pid = current_app.config.get(
-        'CIRCULATION_ITEM_LOCATION_RETRIEVER'
-    )(item_pid)
-    return pickup_location_pid == item_location_pid
-
-
-def should_item_be_returned(item_pid, transaction_location_pid):
-    """."""
-    # pending loans
-    pendings = len(get_pending_loans_for_item(item_pid))
-    if pendings:
-        return True
-
-    # same location
+def is_same_location(item_pid, input_location_pid):
+    """Return True if item belonging location is same as input parameter."""
     item_location_pid = current_app.config.get(
         'CIRCULATION_ITEM_LOCATION_RETRIEVER'
     )(item_pid)
 
-    return transaction_location_pid == item_location_pid
+    return input_location_pid == item_location_pid

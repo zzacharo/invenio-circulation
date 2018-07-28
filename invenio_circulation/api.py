@@ -64,7 +64,7 @@ class Loan(Record):
 def is_item_available(item_pid):
     """."""
     config = current_app.config
-    cfg_item_available = config.get('CIRCULATION_POLICIES').get(
+    cfg_item_available = config['CIRCULATION_POLICIES']['checkout'].get(
         'item_available'
     )
     if not cfg_item_available(item_pid):

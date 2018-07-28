@@ -26,6 +26,7 @@ tests_require = [
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
     'pytest>=3.3.0',
+    'pytest-invenio>=1.0.2',
 ]
 
 invenio_search_version = '1.0.1'
@@ -72,6 +73,7 @@ for name, reqs in extras_require.items():
 setup_requires = ['Babel>=1.3', 'pytest-runner>=2.6.2']
 
 install_requires = [
+    'ciso8601>=2.0.1',
     'Flask-BabelEx>=0.9.3',
     'invenio-base>=1.0.1',
     'invenio-logging>=1.0.0',
@@ -80,6 +82,7 @@ install_requires = [
     'invenio-records-rest>=1.1.2',
     'invenio-rest>=1.0.0',
     'invenio-jsonschemas>=1.0.0',
+    'pytz>=2018.5',
 ]
 
 packages = find_packages()

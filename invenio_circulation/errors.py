@@ -10,7 +10,7 @@
 
 
 class CirculationException(Exception):
-    """."""
+    """Exceptions raised by circulation module."""
 
     def __init__(self, msg):
         """."""
@@ -21,17 +21,17 @@ class InvalidState(CirculationException):
     """State not found in circulation configuration."""
 
 
-class TransitionValidationFailed(CirculationException):
-    """Transition validation failed."""
+class TransitionConditionsFailed(CirculationException):
+    """Conditions for the transition failed at loan state."""
 
 
 class NoValidTransitionAvailable(CirculationException):
-    """Exception raised when all transitions validation failed."""
-
-
-class TransitionPermissionsFailed(CirculationException):
-    """."""
+    """Exception raised when all transitions conditions failed."""
 
 
 class LoanActionError(CirculationException):
     """."""
+
+
+class TransitionConstraintsViolation(CirculationException):
+    """Exception raised when constraints for the transition failed."""

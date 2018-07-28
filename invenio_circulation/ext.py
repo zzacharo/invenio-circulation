@@ -17,7 +17,7 @@ from werkzeug.utils import cached_property
 
 from . import config
 from .errors import InvalidState, NoValidTransitionAvailable, \
-    TransitionValidationFailed
+    TransitionConditionsFailed
 from .transitions.base import Transition
 from .views import build_blueprint_with_loan_actions
 
@@ -80,7 +80,7 @@ class _Circulation(object):
             try:
                 t.execute(loan, **kwargs)
                 return loan
-            except TransitionValidationFailed as ex:
+            except TransitionConditionsFailed as ex:
                 current_app.logger.debug(ex.msg)
                 pass
 

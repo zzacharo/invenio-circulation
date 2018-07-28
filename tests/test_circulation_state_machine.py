@@ -10,18 +10,11 @@
 
 import pytest
 
-from invenio_circulation.errors import InvalidState, NoValidTransitionAvailable
+from invenio_circulation.errors import NoValidTransitionAvailable
 from invenio_circulation.proxies import current_circulation
 
 
-def test_invalid_state(loan_created, app, params):
-    """Test invalid loan state."""
-    loan_created['state'] = 'INVALID'
-    with pytest.raises(InvalidState):
-        current_circulation.circulation.trigger(loan_created, **params)
-
-
 def test_invalid_transitions(loan_created, app, params):
-    """Test no valid transition at this state."""
+    """Test that there are no conditional transitions at this state."""
     with pytest.raises(NoValidTransitionAvailable):
         current_circulation.circulation.trigger(loan_created, **params)

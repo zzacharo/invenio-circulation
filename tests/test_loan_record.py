@@ -60,3 +60,8 @@ def test_state_checkout_with_loan_pid(db, params, loan_schema):
     new_params['trigger'] = 'checkout'
     loan = current_circulation.circulation.trigger(loan_created, **new_params)
     loan.validate()
+
+
+def test_indexed_loans(indexed_loans):
+    """Test mappings, index creation and loans indexing."""
+    assert indexed_loans
