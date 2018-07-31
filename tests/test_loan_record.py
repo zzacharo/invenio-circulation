@@ -10,6 +10,7 @@
 from copy import deepcopy
 from json import loads
 
+import mock
 import pytest
 from jsonschema.exceptions import ValidationError
 from pkg_resources import resource_string
@@ -38,7 +39,8 @@ def test_loan_params(loan_created, db, loan_schema):
         loan_created.validate()
 
 
-def test_state_checkout(loan_created, db, params, loan_schema):
+def test_state_checkout(loan_created, db, params, loan_schema,
+                        mock_is_item_available):
     """."""
     new_params = deepcopy(params)
     new_params['trigger'] = 'checkout'
@@ -49,7 +51,8 @@ def test_state_checkout(loan_created, db, params, loan_schema):
         loan.validate()
 
 
-def test_state_checkout_with_loan_pid(db, params, loan_schema):
+def test_state_checkout_with_loan_pid(loan_created, db, params, loan_schema,
+                                      mock_is_item_available):
     """."""
     data = {}
     data.update({'loan_pid': 'loan_pid'})
