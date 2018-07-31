@@ -67,9 +67,9 @@ def build_blueprint_with_loan_actions(app):
     create_error_handlers(blueprint)
 
     endpoints = app.config.get('CIRCULATION_REST_ENDPOINTS', [])
-    transitions = app.config.get('CIRCULATION_LOAN_TRANSITIONS', [])
-
-    for endpoint, options in (endpoints or {}).items():
+    pid_type = 'loan_pid'
+    options = endpoints.get(pid_type, {})
+    if options:
         options = deepcopy(options)
 
         if 'record_serializers' in options:
@@ -98,23 +98,23 @@ def build_blueprint_with_loan_actions(app):
         )
 
         loan_actions = LoanActionResource.as_view(
-            LoanActionResource.view_name.format(endpoint),
+            LoanActionResource.view_name.format(pid_type),
             serializers=serializers,
             ctx=ctx,
         )
 
         distinct_actions = extract_transitions_from_app(app)
         url = '{0}/<any({1}):action>'.format(
-                options['item_route'],
-                ','.join(distinct_actions),
-            )
+            options['item_route'],
+            ','.join(distinct_actions),
+        )
         blueprint.add_url_rule(
             url,
             view_func=loan_actions,
             methods=['POST'],
         )
 
-        return blueprint
+    return blueprint
 
 
 class LoanActionResource(ContentNegotiatedMethodView):
@@ -126,7 +126,6 @@ class LoanActionResource(ContentNegotiatedMethodView):
         """Constructor."""
         super(LoanActionResource, self).__init__(
             serializers,
-            default_media_type=ctx.get('default_media_type'),
             *args,
             **kwargs
         )
