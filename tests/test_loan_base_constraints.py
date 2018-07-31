@@ -65,7 +65,8 @@ def test_should_fail_when_patron_is_changed(loan_created, db, params):
         current_circulation.circulation.trigger(loan, **dict(params))
 
 
-def test_persist_loan_parameters(loan_created, db, params):
+def test_persist_loan_parameters(loan_created, db, params,
+                                 mock_is_item_available):
     """Test that input params are correctly persisted."""
     loan = current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger='checkout')

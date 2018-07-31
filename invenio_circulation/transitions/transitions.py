@@ -57,6 +57,9 @@ class CreatedToItemOnLoan(Transition):
     def before(self, loan, **kwargs):
         """Validate checkout action."""
         super(CreatedToItemOnLoan, self).before(loan, **kwargs)
+
+        self.ensure_item_is_available(loan)
+
         if loan.get('start_date'):
             loan['start_date'] = parse_date(loan['start_date'])
         if loan.get('end_date'):
@@ -90,6 +93,7 @@ class PendingToItemInTransitPickup(Transition):
     def before(self, loan, **kwargs):
         """Validate if the item is for this location or should transit."""
         super(PendingToItemInTransitPickup, self).before(loan, **kwargs)
+
         if is_same_location(loan['item_pid'], loan['pickup_location_pid']):
             raise TransitionConditionsFailed(
                 msg='Invalid transition to {0}: Pickup is at the same library.'
@@ -102,6 +106,9 @@ class ItemAtDeskToItemOnLoan(Transition):
     def before(self, loan, **kwargs):
         """Validate checkout action."""
         super(ItemAtDeskToItemOnLoan, self).before(loan, **kwargs)
+
+        self.ensure_item_is_available(loan)
+
         if loan.get('start_date'):
             loan['start_date'] = parse_date(loan['start_date'])
         if loan.get('end_date'):

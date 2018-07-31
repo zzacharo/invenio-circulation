@@ -14,13 +14,14 @@ import pytest
 from helpers import SwappedConfig, SwappedNestedConfig
 
 from invenio_circulation.api import Loan, is_item_available
-from invenio_circulation.errors import NoValidTransitionAvailable, \
-    TransitionConstraintsViolation
+from invenio_circulation.errors import ItemNotAvailable, \
+    NoValidTransitionAvailable, TransitionConstraintsViolation
 from invenio_circulation.proxies import current_circulation
 from invenio_circulation.utils import parse_date
 
 
-def test_loan_checkout_checkin(loan_created, db, params):
+def test_loan_checkout_checkin(loan_created, db, params,
+                               mock_is_item_available):
     """Test loan checkout and checkin actions."""
     assert loan_created['state'] == 'CREATED'
 
@@ -53,7 +54,8 @@ def test_loan_request(db, params):
     assert loan['state'] == 'PENDING'
 
 
-def test_cancel_action(loan_created, db, params):
+def test_cancel_action(loan_created, db, params,
+                       mock_is_item_available):
     """Test should pass when calling `cancel` from `ITEM_ON_LOAN`."""
     loan = current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger='checkout')
@@ -108,7 +110,8 @@ def test_validate_item_at_desk(loan_created, db, params):
         assert loan['state'] == 'ITEM_AT_DESK'
 
 
-def test_checkout_start_is_transaction_date(loan_created, db, params):
+def test_checkout_start_is_transaction_date(loan_created, db, params,
+                                            mock_is_item_available):
     """Test checkout start date to transaction date when not set."""
     number_of_days = 10
 
@@ -127,7 +130,8 @@ def test_checkout_start_is_transaction_date(loan_created, db, params):
         assert loan['end_date'] == end_date.isoformat()
 
 
-def test_checkout_with_input_start_end_dates(loan_created, db, params):
+def test_checkout_with_input_start_end_dates(loan_created, db, params,
+                                             mock_is_item_available):
     """Test checkout start and end dates are set as input."""
     start_date = '2018-02-01T09:30:00+02:00'
     end_date = '2018-02-10T09:30:00+02:00'
@@ -143,7 +147,8 @@ def test_checkout_with_input_start_end_dates(loan_created, db, params):
     assert loan['end_date'] == end_date
 
 
-def test_checkout_fails_when_wrong_dates(loan_created, params):
+def test_checkout_fails_when_wrong_dates(loan_created, params,
+                                         mock_is_item_available):
     """Test checkout fails when wrong input dates."""
     with pytest.raises(ValueError):
         current_circulation.circulation.trigger(
@@ -154,7 +159,8 @@ def test_checkout_fails_when_wrong_dates(loan_created, params):
         )
 
 
-def test_checkout_fails_when_duration_invalid(loan_created, params):
+def test_checkout_fails_when_duration_invalid(loan_created, params,
+                                              mock_is_item_available):
     """Test checkout fails when wrong max duration."""
     with pytest.raises(TransitionConstraintsViolation):
         with SwappedNestedConfig(
@@ -168,7 +174,8 @@ def test_checkout_fails_when_duration_invalid(loan_created, params):
             )
 
 
-def test_checkin_end_date_is_transaction_date(loan_created, db, params):
+def test_checkin_end_date_is_transaction_date(loan_created, db, params,
+                                              mock_is_item_available):
     """Test date the checkin date is the transaction date."""
     loan = current_circulation.circulation.trigger(
         loan_created, **dict(params,
@@ -214,3 +221,20 @@ def test_item_availibility(indexed_loans):
     assert not is_item_available(item_pid='item_pending_on_loan_6')
     assert is_item_available(item_pid='item_returned_6')
     assert is_item_available(item_pid='no_loan')
+
+
+def test_checkout_on_unavailable_item(loan_created, db, params,
+                                      mock_is_item_available):
+    """Test checkout fails on unvailable item."""
+    mock_is_item_available.return_value = False
+
+    with pytest.raises(ItemNotAvailable):
+        loan = current_circulation.circulation.trigger(
+            loan_created, **dict(params, trigger='checkout')
+        )
+
+        loan_created['state'] = 'ITEM_AT_DESK'
+
+        loan = current_circulation.circulation.trigger(
+            loan_created, **dict(params)
+        )

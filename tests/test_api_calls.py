@@ -37,7 +37,8 @@ def test_api_get_loan(app, db, json_headers):
         assert loan_dict['metadata']['state'] == loan['state']
 
 
-def test_api_explicit_loan_valid_action(app, db, json_headers, params):
+def test_api_explicit_loan_valid_action(app, db, json_headers, params,
+                                        mock_is_item_available):
     """Test API valid action on loan."""
     loan = Loan.create({})
     minted_loan = loan_pid_minter(loan.id, loan)
@@ -84,7 +85,8 @@ def test_api_automatic_loan_valid_action(app, db, json_headers, params):
         assert loan_dict['metadata']['state'] == 'ITEM_AT_DESK'
 
 
-def test_api_loan_invalid_action(app, db, json_headers, params):
+def test_api_loan_invalid_action(app, db, json_headers, params,
+                                 mock_is_item_available):
     """Test API invalid action on loan."""
     loan = Loan.create({})
     minted_loan = loan_pid_minter(loan.id, loan)
@@ -109,7 +111,8 @@ def test_api_loan_invalid_action(app, db, json_headers, params):
         assert 'message' in error_dict
 
 
-def test_api_loans_links_factory(app, db, json_headers, params):
+def test_api_loans_links_factory(app, db, json_headers, params,
+                                 mock_is_item_available):
     """Test API GET call to fetch a loan by PID."""
     loan = Loan.create({})
     minted_loan = loan_pid_minter(loan.id, loan)

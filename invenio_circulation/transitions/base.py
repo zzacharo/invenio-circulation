@@ -12,8 +12,9 @@ from datetime import datetime
 
 from flask import current_app
 
-from ..errors import InvalidState, TransitionConditionsFailed, \
-    TransitionConstraintsViolation
+from ..api import is_item_available
+from ..errors import InvalidState, ItemNotAvailable, \
+    TransitionConditionsFailed, TransitionConstraintsViolation
 from ..utils import parse_date
 
 
@@ -87,6 +88,14 @@ class Transition(object):
         self.permission_factory = permission_factory
         # validate states
         self.validate_transition_states()
+
+    def ensure_item_is_available(self, loan):
+        """Validate that an item is available."""
+        if not is_item_available(loan['item_pid']):
+                raise ItemNotAvailable(
+                    msg='Invalid transition to {0}: Item {1} is unavailable.'
+                        .format(self.dest, loan['item_pid'])
+                )
 
     def validate_transition_states(self):
         """Ensure that source and destination states are valid."""

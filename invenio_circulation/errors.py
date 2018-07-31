@@ -21,6 +21,10 @@ class InvalidState(CirculationException):
     """State not found in circulation configuration."""
 
 
+class ItemNotAvailable(CirculationException):
+    """Exception raised from action on unavailable item."""
+
+
 class TransitionConditionsFailed(CirculationException):
     """Conditions for the transition failed at loan state."""
 

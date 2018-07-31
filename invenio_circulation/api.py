@@ -69,6 +69,7 @@ def is_item_available(item_pid):
     )
     if not cfg_item_available(item_pid):
         return False
+
     if list(
         Loan.get_loans(
             item_pid,

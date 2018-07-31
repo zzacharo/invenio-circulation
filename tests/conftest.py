@@ -13,6 +13,7 @@ from __future__ import absolute_import, print_function
 import json
 from os.path import dirname, join
 
+import mock
 import pytest
 from flask import Flask
 from helpers import create_loan
@@ -125,9 +126,8 @@ def test_loans(db, test_data):
 
 
 @pytest.yield_fixture()
-def indexer(app, es):
+def indexer(base_app, es):
     """Create a record indexer."""
-    InvenioIndexer(app)
     yield RecordIndexer()
 
 
@@ -138,3 +138,12 @@ def indexed_loans(indexer, test_loans):
         indexer.index_by_id(loan.id)
     current_search.flush_and_refresh(index='loans')
     yield test_loans
+
+
+@pytest.yield_fixture()
+def mock_is_item_available():
+    """Mock item_available check."""
+    path = 'invenio_circulation.transitions.base.is_item_available'
+    with mock.patch(path) as mock_is_item_available:
+            mock_is_item_available.return_value = True
+            yield mock_is_item_available
