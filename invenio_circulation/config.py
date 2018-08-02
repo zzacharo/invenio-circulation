@@ -13,9 +13,9 @@ from invenio_records_rest.utils import allow_all
 from .api import Loan
 from .links import loan_links_factory
 from .transitions.transitions import CreatedToItemOnLoan, CreatedToPending, \
-    ItemAtDeskToItemOnLoan, ItemOnLoanToItemInTransitHouse, \
-    ItemOnLoanToItemReturned, PendingToItemAtDesk, \
-    PendingToItemInTransitPickup
+    ItemAtDeskToItemOnLoan, ItemInTransitHouseToItemReturned, \
+    ItemOnLoanToItemInTransitHouse, ItemOnLoanToItemReturned, \
+    PendingToItemAtDesk, PendingToItemInTransitPickup
 from .utils import get_default_loan_duration, is_item_available, \
     is_loan_duration_valid, item_exists, item_location_retriever, \
     patron_exists
@@ -34,6 +34,12 @@ _Loan_PID = 'pid(loan_pid,record_class="invenio_circulation.api:Loan")'
 
 _CIRCULATION_LOAN_LINKS_FACTORY = loan_links_factory
 """."""
+
+CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT = lambda x: []
+"""Function that returns a list of item pids given a document pid."""
+
+CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM = lambda x: None
+"""Function that returns the document pid of a given item pid."""
 
 CIRCULATION_PERMISSION_FACTORY = allow_all
 """."""
@@ -68,7 +74,8 @@ CIRCULATION_LOAN_TRANSITIONS = {
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_IN_TRANSIT_TO_HOUSE': [
-        dict(dest='ITEM_RETURNED'),
+        dict(dest='ITEM_RETURNED',
+             transition=ItemInTransitHouseToItemReturned),
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_RETURNED': [],

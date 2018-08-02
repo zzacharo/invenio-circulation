@@ -11,7 +11,10 @@
 from datetime import timedelta
 
 from flask import current_app
+from invenio_db import db
 
+from ..api import get_available_item_by_doc_pid, get_document_by_item_pid, \
+    get_items_by_doc_pid, get_pending_loans_by_doc_pid, is_item_available
 from ..errors import TransitionConditionsFailed, TransitionConstraintsViolation
 from ..transitions.base import Transition
 from ..transitions.conditions import is_same_location
@@ -38,12 +41,45 @@ def _ensure_valid_loan_duration(loan):
         raise TransitionConstraintsViolation(msg=msg)
 
 
+def _ensure_item_attached_to_loan(loan):
+    """Validate that an item is attached to a loan."""
+    if not loan.get('item_pid'):
+        raise TransitionConditionsFailed(
+            msg='Invalid transition to {0}: No item found attached.'
+                .format(self.dest))
+
+
+def _update_document_pending_request_for_item(item_pid):
+    """."""
+    document_pid = get_document_by_item_pid(item_pid)
+    for loan in get_pending_loans_by_doc_pid(document_pid):
+        loan['item_pid'] = item_pid
+        loan.commit()
+        db.session.commit()
+        # TODO: index loan again?
+
+
 class CreatedToPending(Transition):
     """Action to request to loan an item."""
 
+    def check_request_on_document(f):
+        """Decorator to check if the request is on document."""
+        def inner(self, loan, **kwargs):
+            document_pid = kwargs.get('document_pid')
+            if document_pid and not 'item_pid' in kwargs:
+                available_item_pid = get_available_item_by_doc_pid(
+                    document_pid
+                )
+                if available_item_pid:
+                    kwargs['item_pid'] = available_item_pid
+            return f(self, loan, **kwargs)
+        return inner
+
+    @check_request_on_document
     def before(self, loan, **kwargs):
         """Set a default pickup location if not passed as param."""
         super(CreatedToPending, self).before(loan, **kwargs)
+
         # set pickup location to item location if not passed as default
         if not loan.get('pickup_location_pid'):
             item_location_pid = current_app.config[
@@ -81,6 +117,9 @@ class PendingToItemAtDesk(Transition):
         """Validate if the item is for this location or should transit."""
         super(PendingToItemAtDesk, self).before(loan, **kwargs)
 
+        # check if a request on document has no item attached
+        _ensure_item_attached_to_loan(loan)
+
         if not is_same_location(loan['item_pid'], loan['pickup_location_pid']):
             msg = 'Invalid transition to {0}: Pickup is not at the same ' \
                   'library.'.format(self.dest)
@@ -93,6 +132,9 @@ class PendingToItemInTransitPickup(Transition):
     def before(self, loan, **kwargs):
         """Validate if the item is for this location or should transit."""
         super(PendingToItemInTransitPickup, self).before(loan, **kwargs)
+
+        # check if a request on document has no item attached
+        _ensure_item_attached_to_loan(loan)
 
         if is_same_location(loan['item_pid'], loan['pickup_location_pid']):
             raise TransitionConditionsFailed(
@@ -163,3 +205,13 @@ class ItemOnLoanToItemReturned(Transition):
         """Convert dates to string before saving loan."""
         loan['end_date'] = loan['end_date'].isoformat()
         super(ItemOnLoanToItemReturned, self).after(loan)
+        _update_document_pending_request_for_item(loan['item_pid'])
+
+
+class ItemInTransitHouseToItemReturned(Transition):
+    """Check-in action when returning an item to its belonging location."""
+
+    def after(self, loan):
+        """Convert dates to string before saving loan."""
+        super(ItemOnLoanToItemReturned, self).after(loan)
+        _update_document_pending_request_for_item(loan['item_pid'])
