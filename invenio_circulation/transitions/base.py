@@ -15,6 +15,7 @@ from flask import current_app
 from ..api import is_item_available
 from ..errors import InvalidState, ItemNotAvailable, \
     TransitionConditionsFailed, TransitionConstraintsViolation
+from ..signals import loan_state_changed
 from ..utils import parse_date
 
 
@@ -124,4 +125,5 @@ class Transition(object):
         """Commit record and index."""
         loan['transaction_date'] = loan['transaction_date'].isoformat()
         loan.commit()
-        # TODO: save to db and index loan here???
+        # TODO: save to db and index loan here, then broadcast the changes.
+        loan_state_changed.send(self, loan=loan)
