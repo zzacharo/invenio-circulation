@@ -8,7 +8,7 @@
 
 """Circulation API."""
 
-from elasticsearch import VERSION as ES_VERSION
+from elasticsearch_dsl.query import Bool, Q
 from flask import current_app
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
@@ -28,21 +28,28 @@ class Loan(Record):
         super(Loan, self).__init__(data, model)
 
     @classmethod
-    def get_loans(cls, item_pid, exclude_states=None):
+    def get_loans_for_pid(cls, item_pid=None, document_pid=None, filter_states=[],
+        exclude_states=[]):
         """."""
         search = LoansSearch()
-        if exclude_states:
-            if ES_VERSION[0] > 2:
-                search = search.exclude('terms', state=exclude_states)
-            else:
-                from elasticsearch_dsl.query import Bool, Q
 
-                search = search.query(
-                    Bool(filter=[~Q('terms', state=exclude_states)])
-                )
-        search = search.filter('term', item_pid=item_pid).source(
-            includes='loan_pid'
-        )
+        if filter_states:
+            search = search.query(
+                Bool(filter=[Q('terms', state=filter_states)])
+            )
+        elif exclude_states:
+            search = search.query(
+                Bool(filter=[~Q('terms', state=exclude_states)])
+            )
+
+        if document_pid:
+            search = search.filter('term', document_pid=document_pid).source(
+                includes='loan_pid'
+            )
+        elif item_pid:
+            search = search.filter('term', item_pid=item_pid).source(
+                includes='loan_pid'
+            )
 
         for result in search.scan():
             if result.loan_pid:
@@ -70,9 +77,8 @@ def is_item_available(item_pid):
     if not cfg_item_available(item_pid):
         return False
 
-    if list(
-        Loan.get_loans(
-            item_pid,
+    if any(True for loan in Loan.get_loans_for_pid(
+            item_pid=item_pid,
             exclude_states=config.get('CIRCULATION_STATES_ITEM_AVAILABLE'),
         )
     ):
@@ -80,7 +86,34 @@ def is_item_available(item_pid):
     return True
 
 
-def get_pending_loans_for_item(item_pid):
+def get_pending_loans_by_item_pid(item_pid):
     """."""
-    # TODO: implement search on ES and fetch results from DB
-    return []
+    return Loan.get_loans_for_pid(item_pid=item_pid,
+                                   filter_states=['PENDING'])
+
+
+def get_pending_loans_by_doc_pid(document_pid):
+    """."""
+    return Loan.get_loans_for_pid(document_pid=document_pid,
+                                   filter_states=['PENDING'])
+
+
+def get_available_item_by_doc_pid(document_pid):
+    """Returns an item pid available for this document."""
+    for item_pid in get_items_by_doc_pid(document_pid):
+        if is_item_available(item_pid):
+            return item_pid
+    return None
+
+def get_items_by_doc_pid(document_pid):
+    """Returns a list of item pids for this document."""
+    return current_app.config['CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT'](
+        document_pid
+    )
+
+
+def get_document_by_item_pid(item_pid):
+    """Return the document pid of this item_pid."""
+    return current_app.config['CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM'](
+        item_pid
+    )

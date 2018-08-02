@@ -56,6 +56,10 @@ def ensure_required_params(f):
             msg = 'Required input parameters are missing `[{}]`'\
                 .format(missing)
             raise TransitionConstraintsViolation(msg=msg)
+        if all(param not in kwargs for param in self.PARTIAL_REQUIRED_PARAMS):
+            msg = 'One of the parameters `[{}]` must be passed.'\
+                .format(missing)
+            raise TransitionConstraintsViolation(msg=msg)
         return f(self, loan, **kwargs)
     return inner
 
@@ -77,8 +81,12 @@ class Transition(object):
         'transaction_user_pid',
         'patron_pid',
         'transaction_location_pid',
-        'transaction_date',
-        'item_pid'
+        'transaction_date'
+    ]
+
+    PARTIAL_REQUIRED_PARAMS = [
+        'item_pid',
+        'document_pid'
     ]
 
     def __init__(self, src, dest, trigger='next', permission_factory=None,
