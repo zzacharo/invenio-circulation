@@ -37,5 +37,9 @@ class LoanActionError(CirculationException):
     """."""
 
 
+class InvalidCirculationPermission(CirculationException):
+    """Raised when permissions are not satisfied for transition."""
+
+
 class TransitionConstraintsViolation(CirculationException):
     """Exception raised when constraints for the transition failed."""

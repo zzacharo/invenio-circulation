@@ -13,8 +13,9 @@ from datetime import datetime
 from flask import current_app
 
 from ..api import is_item_available
-from ..errors import InvalidState, ItemNotAvailable, \
-    TransitionConditionsFailed, TransitionConstraintsViolation
+from ..errors import InvalidCirculationPermission, InvalidState, \
+    ItemNotAvailable, TransitionConditionsFailed, \
+    TransitionConstraintsViolation
 from ..signals import loan_state_changed
 from ..utils import parse_date
 
@@ -86,7 +87,8 @@ class Transition(object):
         self.src = src
         self.dest = dest
         self.trigger = trigger
-        self.permission_factory = permission_factory
+        self.permission_factory = permission_factory or \
+            current_app.config['CIRCULATION_PERMISSION_FACTORY']
         # validate states
         self.validate_transition_states()
 
@@ -111,6 +113,10 @@ class Transition(object):
     @check_trigger
     def before(self, loan, **kwargs):
         """Validate input, evaluate conditions and raise if failed."""
+        if self.permission_factory and not self.permission_factory(loan).can():
+            msg = 'Invalid circulation permission'
+            raise InvalidCirculationPermission(msg=msg)
+
         kwargs.setdefault('transaction_date', datetime.now())
         kwargs['transaction_date'] = parse_date(kwargs['transaction_date'])
         loan.update(kwargs)

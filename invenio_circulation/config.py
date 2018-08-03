@@ -8,6 +8,8 @@
 
 """Invenio module for the circulation of bibliographic items."""
 
+from invenio_records_rest.utils import allow_all
+
 from .api import Loan
 from .links import loan_links_factory
 from .transitions.transitions import CreatedToItemOnLoan, CreatedToPending, \
@@ -33,6 +35,8 @@ _Loan_PID = 'pid(loan_pid,record_class="invenio_circulation.api:Loan")'
 _CIRCULATION_LOAN_LINKS_FACTORY = loan_links_factory
 """."""
 
+CIRCULATION_PERMISSION_FACTORY = allow_all
+"""."""
 
 CIRCULATION_STATES_ITEM_AVAILABLE = ['ITEM_RETURNED']
 """."""

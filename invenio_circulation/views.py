@@ -19,8 +19,8 @@ from invenio_records_rest.views import pass_record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.views import create_api_errorhandler
 
-from invenio_circulation.errors import ItemNotAvailable, LoanActionError, \
-    NoValidTransitionAvailable
+from invenio_circulation.errors import InvalidCirculationPermission, \
+    ItemNotAvailable, LoanActionError, NoValidTransitionAvailable
 from invenio_circulation.proxies import current_circulation
 
 HTTP_CODES = {
@@ -125,7 +125,11 @@ class LoanActionResource(ContentNegotiatedMethodView):
                 record, **dict(params, trigger=action)
             )
             db.session.commit()
-        except (ItemNotAvailable, NoValidTransitionAvailable) as ex:
+        except (
+            ItemNotAvailable,
+            InvalidCirculationPermission,
+            NoValidTransitionAvailable
+        ) as ex:
             current_app.logger.exception(ex.msg)
             raise LoanActionError(ex)
 
