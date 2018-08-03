@@ -8,7 +8,7 @@
 
 """Search utilities."""
 
-
+from elasticsearch_dsl.query import Bool, Q
 from invenio_search.api import RecordsSearch
 
 
@@ -19,3 +19,32 @@ class LoansSearch(RecordsSearch):
         """Search only on loans index."""
 
         index = 'loans'
+        doc_types = None
+
+    @classmethod
+    def search_loans_by_pid(cls, item_pid=None, document_pid=None,
+                            filter_states=[], exclude_states=[]):
+        """."""
+        search = cls()
+
+        if filter_states:
+            search = search.query(
+                Bool(filter=[Q('terms', state=filter_states)])
+            )
+        elif exclude_states:
+            search = search.query(
+                Bool(filter=[~Q('terms', state=exclude_states)])
+            )
+
+        if document_pid:
+            search = search.filter('term', document_pid=document_pid).source(
+                includes='loan_pid'
+            )
+        elif item_pid:
+            search = search.filter('term', item_pid=item_pid).source(
+                includes='loan_pid'
+            )
+
+        for result in search.scan():
+            if result.loan_pid:
+                yield result

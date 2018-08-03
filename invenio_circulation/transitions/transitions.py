@@ -66,7 +66,7 @@ class CreatedToPending(Transition):
         """Decorator to check if the request is on document."""
         def inner(self, loan, **kwargs):
             document_pid = kwargs.get('document_pid')
-            if document_pid and not 'item_pid' in kwargs:
+            if document_pid and not kwargs.get('item_pid'):
                 available_item_pid = get_available_item_by_doc_pid(
                     document_pid
                 )
