@@ -42,6 +42,12 @@ class InvenioCirculation(object):
 
     def init_config(self, app):
         """Initialize configuration."""
+        app.config.setdefault(
+            'CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT', lambda x: []
+        )
+        app.config.setdefault(
+            'CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM', lambda x: None
+        )
         for k in dir(config):
             if k.startswith('CIRCULATION_'):
                 app.config.setdefault(k, getattr(config, k))

@@ -8,7 +8,6 @@
 
 """Circulation API."""
 
-from elasticsearch_dsl.query import Bool, Q
 from flask import current_app
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
@@ -26,34 +25,6 @@ class Loan(Record):
             current_app.config['CIRCULATION_LOAN_INITIAL_STATE']
         )
         super(Loan, self).__init__(data, model)
-
-    @classmethod
-    def get_loans_for_pid(cls, item_pid=None, document_pid=None, filter_states=[],
-        exclude_states=[]):
-        """."""
-        search = LoansSearch()
-
-        if filter_states:
-            search = search.query(
-                Bool(filter=[Q('terms', state=filter_states)])
-            )
-        elif exclude_states:
-            search = search.query(
-                Bool(filter=[~Q('terms', state=exclude_states)])
-            )
-
-        if document_pid:
-            search = search.filter('term', document_pid=document_pid).source(
-                includes='loan_pid'
-            )
-        elif item_pid:
-            search = search.filter('term', item_pid=item_pid).source(
-                includes='loan_pid'
-            )
-
-        for result in search.scan():
-            if result.loan_pid:
-                yield cls.get_record_by_pid(result.loan_pid)
 
     @classmethod
     def get_record_by_pid(cls, pid, with_deleted=False):
@@ -77,7 +48,7 @@ def is_item_available(item_pid):
     if not cfg_item_available(item_pid):
         return False
 
-    if any(True for loan in Loan.get_loans_for_pid(
+    if any(True for loan in LoansSearch.search_loans_by_pid(
             item_pid=item_pid,
             exclude_states=config.get('CIRCULATION_STATES_ITEM_AVAILABLE'),
         )
@@ -88,14 +59,16 @@ def is_item_available(item_pid):
 
 def get_pending_loans_by_item_pid(item_pid):
     """."""
-    return Loan.get_loans_for_pid(item_pid=item_pid,
-                                   filter_states=['PENDING'])
+    for result in LoansSearch.search_loans_by_pid(item_pid=item_pid,
+                                                  filter_states=['PENDING']):
+        yield Loan.get_record_by_pid(result['loan_pid'])
 
 
 def get_pending_loans_by_doc_pid(document_pid):
     """."""
-    return Loan.get_loans_for_pid(document_pid=document_pid,
-                                   filter_states=['PENDING'])
+    for result in LoansSearch.search_loans_by_pid(document_pid=document_pid,
+                                                  filter_states=['PENDING']):
+        yield Loan.get_record_by_pid(result['loan_pid'])
 
 
 def get_available_item_by_doc_pid(document_pid):
@@ -104,6 +77,7 @@ def get_available_item_by_doc_pid(document_pid):
         if is_item_available(item_pid):
             return item_pid
     return None
+
 
 def get_items_by_doc_pid(document_pid):
     """Returns a list of item pids for this document."""

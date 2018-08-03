@@ -12,6 +12,7 @@ from invenio_records_rest.utils import allow_all
 
 from .api import Loan
 from .links import loan_links_factory
+from .search import LoansSearch
 from .transitions.transitions import CreatedToItemOnLoan, CreatedToPending, \
     ItemAtDeskToItemOnLoan, ItemInTransitHouseToItemReturned, \
     ItemOnLoanToItemInTransitHouse, ItemOnLoanToItemReturned, \
@@ -35,10 +36,10 @@ _Loan_PID = 'pid(loan_pid,record_class="invenio_circulation.api:Loan")'
 _CIRCULATION_LOAN_LINKS_FACTORY = loan_links_factory
 """."""
 
-CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT = lambda x: []
+CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT = None
 """Function that returns a list of item pids given a document pid."""
 
-CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM = lambda x: None
+CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM = None
 """Function that returns the document pid of a given item pid."""
 
 CIRCULATION_PERMISSION_FACTORY = allow_all
@@ -109,10 +110,8 @@ CIRCULATION_REST_ENDPOINTS = dict(
         pid_type=_CIRCULATION_LOAN_PID_TYPE,
         pid_minter=_CIRCULATION_LOAN_MINTER,
         pid_fetcher=_CIRCULATION_LOAN_FETCHER,
-        # search_class=RecordsSearch,
-        # indexer_class=RecordIndexer,
-        # search_index=None,
-        # search_type=None,
+        search_class=LoansSearch,
+        search_type=None,
         record_class=Loan,
         record_serializers={
             'application/json': ('invenio_records_rest.serializers'
