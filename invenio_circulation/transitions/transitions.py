@@ -14,7 +14,7 @@ from flask import current_app
 from invenio_db import db
 
 from ..api import get_available_item_by_doc_pid, get_document_by_item_pid, \
-    get_items_by_doc_pid, get_pending_loans_by_doc_pid, is_item_available
+    get_pending_loans_by_doc_pid, is_item_available
 from ..errors import TransitionConditionsFailed, TransitionConstraintsViolation
 from ..transitions.base import Transition
 from ..transitions.conditions import is_same_location
@@ -45,8 +45,8 @@ def _ensure_item_attached_to_loan(loan):
     """Validate that an item is attached to a loan."""
     if not loan.get('item_pid'):
         raise TransitionConditionsFailed(
-            msg='Invalid transition to {0}: No item found attached.'
-                .format(self.dest))
+            msg='No item found attached in loan with pid {0}.'
+                .format(str(loan.id)))
 
 
 def _update_document_pending_request_for_item(item_pid):
