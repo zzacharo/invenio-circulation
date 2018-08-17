@@ -8,7 +8,7 @@
 
 """Invenio Circulation custom transitions."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask import current_app
 from invenio_db import db
@@ -57,6 +57,34 @@ def _update_document_pending_request_for_item(item_pid):
         loan.commit()
         db.session.commit()
         # TODO: index loan again?
+
+
+def _ensure_valid_extension(loan):
+    """Validate end dates for a extended loan."""
+    get_extension_max_count = current_app.config['CIRCULATION_POLICIES'][
+        'extension']['max_count']
+    extension_max_count = get_extension_max_count(loan)
+
+    extension_count = loan.get('extension_count', 0)
+    extension_count += 1
+    if extension_count > extension_max_count + 1:
+        msg = 'Max extension count reached `{0}`'.format(extension_max_count)
+        raise TransitionConstraintsViolation(msg=msg)
+
+    loan['extension_count'] = extension_count
+
+    get_extension_duration = current_app.config['CIRCULATION_POLICIES'][
+        'extension']['duration_default']
+    number_of_days = get_extension_duration(loan)
+    get_extension_from_end_date = current_app.config[
+        'CIRCULATION_POLICIES']['extension']['from_end_date']
+
+    end_date = parse_date(loan['end_date'])
+    if not get_extension_from_end_date:
+        end_date = loan.get('transaction_date')
+
+    end_date += timedelta(days=number_of_days)
+    loan['end_date'] = end_date.isoformat()
 
 
 class CreatedToPending(Transition):
@@ -163,6 +191,20 @@ class ItemAtDeskToItemOnLoan(Transition):
         loan['start_date'] = loan['start_date'].isoformat()
         loan['end_date'] = loan['end_date'].isoformat()
         super(ItemAtDeskToItemOnLoan, self).after(loan)
+
+
+class ItemOnLoanToItemOnLoan(Transition):
+    """Extend action to perform a item loan extension."""
+
+    def before(self, loan, **kwargs):
+        """Validate extension action."""
+        super(ItemOnLoanToItemOnLoan, self).before(loan, **kwargs)
+
+        _ensure_valid_extension(loan)
+
+    def after(self, loan):
+        """."""
+        super(ItemOnLoanToItemOnLoan, self).after(loan)
 
 
 class ItemOnLoanToItemInTransitHouse(Transition):

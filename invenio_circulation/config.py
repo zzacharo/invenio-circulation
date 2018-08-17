@@ -15,11 +15,13 @@ from .links import loan_links_factory
 from .search import LoansSearch
 from .transitions.transitions import CreatedToItemOnLoan, CreatedToPending, \
     ItemAtDeskToItemOnLoan, ItemInTransitHouseToItemReturned, \
-    ItemOnLoanToItemInTransitHouse, ItemOnLoanToItemReturned, \
-    PendingToItemAtDesk, PendingToItemInTransitPickup
-from .utils import get_default_loan_duration, is_item_available, \
-    is_loan_duration_valid, item_exists, item_location_retriever, \
-    patron_exists
+    ItemOnLoanToItemInTransitHouse, ItemOnLoanToItemOnLoan, \
+    ItemOnLoanToItemReturned, PendingToItemAtDesk, \
+    PendingToItemInTransitPickup
+from .utils import get_default_extension_duration, \
+    get_default_extension_max_count, get_default_loan_duration, \
+    is_item_available, is_loan_duration_valid, item_exists, \
+    item_location_retriever, patron_exists
 
 _CIRCULATION_LOAN_PID_TYPE = 'loan_pid'
 """."""
@@ -72,6 +74,8 @@ CIRCULATION_LOAN_TRANSITIONS = {
         dict(dest='ITEM_RETURNED', transition=ItemOnLoanToItemReturned),
         dict(dest='ITEM_IN_TRANSIT_TO_HOUSE',
              transition=ItemOnLoanToItemInTransitHouse),
+        dict(dest='ITEM_ON_LOAN', transition=ItemOnLoanToItemOnLoan,
+             trigger='extend'),
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_IN_TRANSIT_TO_HOUSE': [
@@ -101,6 +105,11 @@ CIRCULATION_POLICIES = dict(
         duration_default=get_default_loan_duration,
         duration_validate=is_loan_duration_valid,
         item_available=is_item_available
+    ),
+    extension=dict(
+        from_end_date=True,
+        duration_default=get_default_extension_duration,
+        max_count=get_default_extension_max_count
     ),
 )
 """."""

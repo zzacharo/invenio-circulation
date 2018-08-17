@@ -38,6 +38,16 @@ def get_default_loan_duration(loan):
     return 30
 
 
+def get_default_extension_duration(loan):
+    """Return a default extension duration in number of days."""
+    return 30
+
+
+def get_default_extension_max_count(loan):
+    """Return a default extensions max count."""
+    return float("inf")
+
+
 def is_loan_duration_valid(loan):
     """Validate the loan duration."""
     return loan['end_date'] > loan['start_date'] and \

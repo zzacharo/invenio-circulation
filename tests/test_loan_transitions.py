@@ -12,6 +12,7 @@ from datetime import timedelta
 
 import mock
 import pytest
+from flask import current_app
 from helpers import SwappedConfig, SwappedNestedConfig
 
 from invenio_circulation.api import Loan, is_item_available
@@ -58,6 +59,61 @@ def test_loan_request(loan_created, db, params):
     )
     db.session.commit()
     assert loan['state'] == 'PENDING'
+
+
+def test_loan_extend(loan_created, db, params,
+                     mock_is_item_available):
+    """Test loan extend action."""
+
+    def get_max_count_1(loan):
+        return 1
+
+    loan = current_circulation.circulation.trigger(
+        loan_created, **dict(params, trigger='checkout')
+    )
+    db.session.commit()
+    end_date = parse_date(loan['end_date'])
+
+    loan = current_circulation.circulation.trigger(
+        loan, **dict(params, trigger='extend')
+    )
+    db.session.commit()
+    new_end_date = parse_date(loan['end_date'])
+    assert new_end_date == end_date + timedelta(days=30)
+    assert loan['extension_count'] == 1
+    loan = current_circulation.circulation.trigger(
+        loan, **dict(params, trigger='extend')
+    )
+    db.session.commit()
+
+    # test to manny extensions
+    current_app.config['CIRCULATION_POLICIES']['extension'][
+        'max_count'] = get_max_count_1
+    with pytest.raises(TransitionConstraintsViolation):
+        loan = current_circulation.circulation.trigger(
+            loan, **dict(params, trigger='extend')
+        )
+
+
+def test_loan_extend_from_enddate(loan_created, db, params,
+                                  mock_is_item_available):
+    """Test loan extend action from transaction date."""
+
+    loan = current_circulation.circulation.trigger(
+        loan_created, **dict(params, trigger='checkout')
+    )
+    db.session.commit()
+    extension_date = parse_date(loan.get('transaction_date'))
+    current_app.config['CIRCULATION_POLICIES']['extension'][
+        'from_end_date'] = False
+
+    loan = current_circulation.circulation.trigger(
+        loan, **dict(params, trigger='extend')
+    )
+    db.session.commit()
+    new_end_date = parse_date(loan['end_date'])
+    assert new_end_date == extension_date + timedelta(days=30)
+    assert loan['extension_count'] == 1
 
 
 def test_cancel_action(loan_created, db, params,
