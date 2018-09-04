@@ -4,7 +4,6 @@
   "type": "object",
   "required": [
     "$schema",
-    "loan_pid",
     "state"
   ],
   "additionalProperties": false,
@@ -14,6 +13,10 @@
       "description": "Schema to validate loans.",
       "type": "string",
       "minLength": 7
+    },
+    "extension_count": {
+      "title": "Loan extension count",
+      "type": "integer"
     },
     "loan_pid": {
       "title": "Loan ID",

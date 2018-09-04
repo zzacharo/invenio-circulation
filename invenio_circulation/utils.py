@@ -30,7 +30,7 @@ def is_item_available(item_pid):
 
 def item_location_retriever(item_pid):
     """Retrieve the location pid of the passed item pid."""
-    pass
+    return ''
 
 
 def get_default_loan_duration(loan):

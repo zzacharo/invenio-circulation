@@ -336,16 +336,17 @@ def test_request_on_document_with_unavailable_items(mock_available_item,
     mock_available_item.return_value = False
     with SwappedConfig('CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT',
                        lambda x: ['item_pid']):
+        # remove item_pid
+        params.pop('item_pid')
         loan = current_circulation.circulation.trigger(
             loan_created, **dict(params,
                                  trigger='request',
-                                 item_pid=None,
                                  document_pid='document_pid',
                                  pickup_location_pid='pickup_location_pid')
         )
         db.session.commit()
         assert loan['state'] == 'PENDING'
-        assert loan['item_pid'] is None
+        assert 'item_pid' not in loan
         assert loan['document_pid'] == 'document_pid'
 
 
@@ -380,16 +381,18 @@ def test_document_requests_on_item_returned(mock_available_item,
 
             # create a new loan request on document_pid without items available
             new_loan_created = Loan.create({})
+            # remove item_pid
+            params.pop('item_pid')
             pending_loan = current_circulation.circulation.trigger(
                 new_loan_created,
-                **dict(params, trigger='request', item_pid=None,
+                **dict(params, trigger='request',
                        document_pid='document_pid',
                        pickup_location_pid='pickup_location_pid')
             )
             db.session.commit()
             assert pending_loan['state'] == 'PENDING'
             # no item available found. Request is created with no item attached
-            assert pending_loan['item_pid'] is None
+            assert 'item_pid' not in pending_loan
             assert pending_loan['document_pid'] == 'document_pid'
 
             # resolve pending document requests to `document_pid`

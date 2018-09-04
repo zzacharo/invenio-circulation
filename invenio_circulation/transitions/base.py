@@ -30,7 +30,7 @@ def ensure_same_item_patron(f):
             msg = 'Item `{0}` not found in the system'.format(new_item_pid)
             raise TransitionConstraintsViolation(msg=msg)
 
-        if 'item_pid' in loan and new_item_pid != loan['item_pid']:
+        if loan.get('item_pid') and new_item_pid != loan['item_pid']:
             msg = 'Loan item is `{0}` but transition is trying to set it to ' \
                   '`{1}`'.format(loan['item_pid'], new_item_pid)
             raise TransitionConstraintsViolation(msg=msg)
