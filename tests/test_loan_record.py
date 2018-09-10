@@ -36,7 +36,7 @@ def test_state_checkout_with_loan_pid(loan_created, db, params, loan_schema,
                                       mock_is_item_available):
     """."""
     data = {}
-    data.update({'loan_pid': 'loan_pid'})
+    data.update({'loanid': 'loanid'})
     data.update(loan_schema)
     loan_created = Loan.create(data)
 

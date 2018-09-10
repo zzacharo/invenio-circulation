@@ -67,7 +67,7 @@ def build_blueprint_with_loan_actions(app):
     create_error_handlers(blueprint)
 
     endpoints = app.config.get('CIRCULATION_REST_ENDPOINTS', [])
-    pid_type = 'loan_pid'
+    pid_type = 'loanid'
     options = endpoints.get(pid_type, {})
     if options:
         options = deepcopy(options)
