@@ -29,7 +29,7 @@ def test_api_get_loan(app, db, json_headers):
     assert minted_loan.pid_value == loan_pid.pid_value
 
     with app.test_client() as client:
-        url = url_for('invenio_records_rest.loan_pid_item',
+        url = url_for('invenio_records_rest.loanid_item',
                       pid_value=loan_pid.pid_value)
         res = client.get(url, headers=json_headers)
         assert res.status_code == 200
@@ -48,7 +48,7 @@ def test_api_explicit_loan_valid_action(app, db, json_headers, params,
     assert minted_loan.pid_value == loan_pid.pid_value
 
     with app.test_client() as client:
-        url = url_for('invenio_circulation.loan_pid_actions',
+        url = url_for('invenio_circulation.loanid_actions',
                       pid_value=loan_pid.pid_value, action='checkout')
         res = client.post(url, headers=json_headers, data=json.dumps(params))
         assert res.status_code == HTTP_CODES['accepted']
@@ -76,7 +76,7 @@ def test_api_automatic_loan_valid_action(app, db, json_headers, params):
     assert minted_loan.pid_value == loan_pid.pid_value
 
     with app.test_client() as client:
-        url = url_for('invenio_circulation.loan_pid_actions',
+        url = url_for('invenio_circulation.loanid_actions',
                       pid_value=loan_pid.pid_value, action='next')
         res = client.post(url, headers=json_headers, data=json.dumps(params))
 
@@ -103,7 +103,7 @@ def test_api_loan_invalid_action(app, db, json_headers, params,
     assert minted_loan.pid_value == loan_pid.pid_value
 
     with app.test_client() as client:
-        url = url_for('invenio_circulation.loan_pid_actions',
+        url = url_for('invenio_circulation.loanid_actions',
                       pid_value=loan_pid.pid_value, action='checkout')
         res = client.post(url, headers=json_headers, data=json.dumps(params))
         assert res.status_code == HTTP_CODES['method_not_allowed']
@@ -126,7 +126,7 @@ def test_api_loans_links_factory(app, db, json_headers, params,
         }
     }
     with app.test_client() as client:
-        url = url_for('invenio_records_rest.loan_pid_item',
+        url = url_for('invenio_records_rest.loanid_item',
                       pid_value=loan_pid.pid_value)
         res = client.get(url, headers=json_headers)
         assert res.status_code == 200

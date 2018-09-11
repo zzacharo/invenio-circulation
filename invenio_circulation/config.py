@@ -23,16 +23,16 @@ from .utils import get_default_extension_duration, \
     is_item_available, is_loan_duration_valid, item_exists, \
     item_location_retriever, patron_exists
 
-_CIRCULATION_LOAN_PID_TYPE = 'loan_pid'
+_CIRCULATION_LOAN_PID_TYPE = 'loanid'
 """."""
 
-_CIRCULATION_LOAN_MINTER = 'loan_pid'
+_CIRCULATION_LOAN_MINTER = 'loanid'
 """."""
 
-_CIRCULATION_LOAN_FETCHER = 'loan_pid'
+_CIRCULATION_LOAN_FETCHER = 'loanid'
 """."""
 
-_Loan_PID = 'pid(loan_pid,record_class="invenio_circulation.api:Loan")'
+_Loan_PID = 'pid(loanid,record_class="invenio_circulation.api:Loan")'
 """."""
 
 _CIRCULATION_LOAN_LINKS_FACTORY = loan_links_factory
@@ -115,7 +115,7 @@ CIRCULATION_POLICIES = dict(
 """."""
 
 CIRCULATION_REST_ENDPOINTS = dict(
-    loan_pid=dict(
+    loanid=dict(
         pid_type=_CIRCULATION_LOAN_PID_TYPE,
         pid_minter=_CIRCULATION_LOAN_MINTER,
         pid_fetcher=_CIRCULATION_LOAN_FETCHER,

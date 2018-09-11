@@ -72,7 +72,7 @@ def get_pending_loans_by_item_pid(item_pid):
     for result in LoansSearch.search_loans_by_pid(
         item_pid=item_pid, filter_states=["PENDING"]
     ):
-        yield Loan.get_record_by_pid(result["loan_pid"])
+        yield Loan.get_record_by_pid(result["loanid"])
 
 
 def get_pending_loans_by_doc_pid(document_pid):
@@ -80,7 +80,7 @@ def get_pending_loans_by_doc_pid(document_pid):
     for result in LoansSearch.search_loans_by_pid(
         document_pid=document_pid, filter_states=["PENDING"]
     ):
-        yield Loan.get_record_by_pid(result["loan_pid"])
+        yield Loan.get_record_by_pid(result["loanid"])
 
 
 def get_available_item_by_doc_pid(document_pid):

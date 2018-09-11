@@ -38,13 +38,13 @@ class LoansSearch(RecordsSearch):
 
         if document_pid:
             search = search.filter('term', document_pid=document_pid).source(
-                includes='loan_pid'
+                includes='loanid'
             )
         elif item_pid:
             search = search.filter('term', item_pid=item_pid).source(
-                includes='loan_pid'
+                includes='loanid'
             )
 
         for result in search.scan():
-            if result.loan_pid:
+            if result.loanid:
                 yield result

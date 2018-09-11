@@ -18,7 +18,7 @@
       "title": "Loan extension count",
       "type": "integer"
     },
-    "loan_pid": {
+    "loanid": {
       "title": "Loan ID",
       "type": "string"
     },
