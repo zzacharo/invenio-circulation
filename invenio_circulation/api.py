@@ -23,9 +23,7 @@ class Loan(Record):
 
     def __init__(self, data, model=None):
         """."""
-        data.setdefault(
-            "state", current_app.config["CIRCULATION_LOAN_INITIAL_STATE"]
-        )
+        self["state"] = current_app.config["CIRCULATION_LOAN_INITIAL_STATE"]
         super(Loan, self).__init__(data, model)
 
     @classmethod
