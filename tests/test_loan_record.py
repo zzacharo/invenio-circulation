@@ -32,25 +32,6 @@ def test_state_enum(app):
     assert not (set(state_dict.get('enum')) - set(all_states))
 
 
-def test_loan_params(loan_created, db, loan_schema):
-    """."""
-    loan_created.update(loan_schema)
-    with pytest.raises(ValidationError):
-        loan_created.validate()
-
-
-def test_state_checkout(loan_created, db, params, loan_schema,
-                        mock_is_item_available):
-    """."""
-    new_params = deepcopy(params)
-    new_params['trigger'] = 'checkout'
-    loan = current_circulation.circulation.trigger(loan_created, **new_params)
-
-    loan.update(loan_schema)
-    with pytest.raises(ValidationError):
-        loan.validate()
-
-
 def test_state_checkout_with_loan_pid(loan_created, db, params, loan_schema,
                                       mock_is_item_available):
     """."""

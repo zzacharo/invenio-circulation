@@ -67,4 +67,4 @@ def create_loan(data):
         rec_uuid = uuid.uuid4()
         pid = current_pidstore.minters['loan_pid'](rec_uuid, data)
         record = Loan.create(data, id_=rec_uuid)
-    return pid, record
+        return pid, record

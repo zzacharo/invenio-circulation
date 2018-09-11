@@ -50,6 +50,7 @@ import click
 from flask import Flask
 from invenio_db import db
 from invenio_db.ext import InvenioDB
+from invenio_jsonschemas import InvenioJSONSchemas
 from invenio_pidstore.ext import InvenioPIDStore
 from invenio_records.ext import InvenioRecords
 from invenio_records_rest.ext import InvenioRecordsREST
@@ -65,21 +66,23 @@ from invenio_circulation.pid.minters import loan_pid_minter
 # Create Flask application
 app = Flask(__name__)
 app.config.update(
-    SERVER_NAME='localhost:5000',
-    SECRET_KEY='SECRET_KEY',
+    SERVER_NAME="localhost:5000",
+    SECRET_KEY="SECRET_KEY",
     # No permission checking
     RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
     SQLALCHEMY_TRACK_MODIFICATIONS=True,
-    SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
-                                      'sqlite:///app.db'),
+    SQLALCHEMY_DATABASE_URI=os.getenv(
+        "SQLALCHEMY_DATABASE_URI", "sqlite:///app.db"
+    ),
 )
-app.config['RECORDS_REST_ENDPOINTS'] = CIRCULATION_REST_ENDPOINTS
-app.url_map.converters['pid'] = PIDConverter
+app.config["RECORDS_REST_ENDPOINTS"] = CIRCULATION_REST_ENDPOINTS
+app.url_map.converters["pid"] = PIDConverter
 InvenioDB(app)
 InvenioRecords(app)
 InvenioRecordsREST(app)
 InvenioPIDStore(app)
 InvenioSearch(app)
+InvenioJSONSchemas(app)
 InvenioCirculation(app)
 app.register_blueprint(create_blueprint_from_app(app))
 
@@ -95,4 +98,4 @@ def loans():
     loan = Loan.create({})
     pid = loan_pid_minter(loan.id, loan)
     db.session.commit()
-    click.secho('Loan #{} created.'.format(pid.pid_value), fg='green')
+    click.secho("Loan #{} created.".format(pid.pid_value), fg="green")
