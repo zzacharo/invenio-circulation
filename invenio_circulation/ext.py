@@ -33,30 +33,44 @@ class InvenioCirculation(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
-        app.config.setdefault('RECORDS_REST_ENDPOINTS', {})
-        app.config['RECORDS_REST_ENDPOINTS'].update(
-            app.config['CIRCULATION_REST_ENDPOINTS'])
+        app.config.setdefault("RECORDS_REST_ENDPOINTS", {})
+
+        self.update_circulation_rest_permissions(app)
+
+        app.config["RECORDS_REST_ENDPOINTS"].update(
+            app.config["CIRCULATION_REST_ENDPOINTS"]
+        )
         blueprint = build_blueprint_with_loan_actions(app)
         app.register_blueprint(blueprint)
-        app.extensions['invenio-circulation'] = self
+        app.extensions["invenio-circulation"] = self
 
     def init_config(self, app):
         """Initialize configuration."""
         app.config.setdefault(
-            'CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT', lambda x: []
+            "CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT", lambda x: []
         )
         app.config.setdefault(
-            'CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM', lambda x: None
+            "CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM", lambda x: None
         )
         for k in dir(config):
-            if k.startswith('CIRCULATION_'):
+            if k.startswith("CIRCULATION_"):
                 app.config.setdefault(k, getattr(config, k))
+
+    def update_circulation_rest_permissions(self, app):
+        """Update circulation rest permissions."""
+        for key, item in app.config[
+            "CIRCULATION_REST_PERMISSION_FACTORIES"
+        ].items():
+            app.config["CIRCULATION_REST_ENDPOINTS"][key].update(item)
 
     @cached_property
     def circulation(self):
         """."""
-        return _Circulation(transitions_config=deepcopy(current_app.config[
-            'CIRCULATION_LOAN_TRANSITIONS']))
+        return _Circulation(
+            transitions_config=deepcopy(
+                current_app.config["CIRCULATION_LOAN_TRANSITIONS"]
+            )
+        )
 
 
 class _Circulation(object):
@@ -68,18 +82,18 @@ class _Circulation(object):
         for src_state, transitions in transitions_config.items():
             self.transitions.setdefault(src_state, [])
             for t in transitions:
-                _cls = t.pop('transition', Transition)
+                _cls = t.pop("transition", Transition)
                 instance = _cls(**dict(t, src=src_state))
                 self.transitions[src_state].append(instance)
 
     def _validate_current_state(self, current_state):
         """."""
         if not current_state or current_state not in self.transitions:
-            raise InvalidState('Invalid loan state `{}`'.format(current_state))
+            raise InvalidState("Invalid loan state `{}`".format(current_state))
 
     def trigger(self, loan, **kwargs):
         """."""
-        current_state = loan.get('state')
+        current_state = loan.get("state")
         self._validate_current_state(current_state)
 
         for t in self.transitions[current_state]:
@@ -90,5 +104,7 @@ class _Circulation(object):
                 current_app.logger.debug(ex.msg)
                 pass
 
-        raise NoValidTransitionAvailable('No valid transition with current'
-                                         ' state `{}`.'.format(current_state))
+        raise NoValidTransitionAvailable(
+            "No valid transition with current"
+            " state `{}`.".format(current_state)
+        )

@@ -8,6 +8,7 @@
 
 """Invenio module for the circulation of bibliographic items."""
 
+from invenio_indexer.api import RecordIndexer
 from invenio_records_rest.utils import allow_all
 
 from .api import Loan
@@ -138,4 +139,7 @@ CIRCULATION_REST_ENDPOINTS = dict(
         error_handlers=dict(),
     ),
 )
+"""."""
+
+CIRCULATION_REST_PERMISSION_FACTORIES = {}
 """."""
