@@ -112,6 +112,9 @@ setup(
         'invenio_base.apps': [
             'invenio_circulation = invenio_circulation:InvenioCirculation'
         ],
+        'invenio_base.api_apps': [
+            'invenio_circulation = invenio_circulation:InvenioCirculation'
+        ],
         'invenio_i18n.translations': ['messages = invenio_circulation'],
         'invenio_pidstore.fetchers': [
             'loanid = invenio_circulation.pid.fetchers:loan_pid_fetcher'
