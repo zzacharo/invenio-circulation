@@ -18,33 +18,46 @@ class LoansSearch(RecordsSearch):
     class Meta:
         """Search only on loans index."""
 
-        index = 'loans'
+        index = "loans"
         doc_types = None
 
     @classmethod
-    def search_loans_by_pid(cls, item_pid=None, document_pid=None,
-                            filter_states=[], exclude_states=[]):
+    def search_loans_by_pid(
+        cls,
+        item_pid=None,
+        document_pid=None,
+        filter_states=[],
+        exclude_states=[],
+    ):
         """."""
         search = cls()
 
         if filter_states:
             search = search.query(
-                Bool(filter=[Q('terms', state=filter_states)])
+                Bool(filter=[Q("terms", state=filter_states)])
             )
         elif exclude_states:
             search = search.query(
-                Bool(filter=[~Q('terms', state=exclude_states)])
+                Bool(filter=[~Q("terms", state=exclude_states)])
             )
 
         if document_pid:
-            search = search.filter('term', document_pid=document_pid).source(
-                includes='loanid'
+            search = search.filter("term", document_pid=document_pid).source(
+                includes="loanid"
             )
         elif item_pid:
-            search = search.filter('term', item_pid=item_pid).source(
-                includes='loanid'
+            search = search.filter("term", item_pid=item_pid).source(
+                includes="loanid"
             )
 
         for result in search.scan():
             if result.loanid:
                 yield result
+
+    @classmethod
+    def search_loans_by_patron_pid(cls, patron_pid):
+        """Retrieve loans of a patron."""
+        search = cls()
+        search = search.filter("term", patron_pid=patron_pid)
+        for result in search.scan():
+            yield result

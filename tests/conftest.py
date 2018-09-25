@@ -32,35 +32,36 @@ from invenio_circulation.api import Loan
 from invenio_circulation.ext import InvenioCirculation
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def app_config(app_config):
     """Flask application fixture."""
-    app_config['SERVER_NAME'] = 'localhost:5000'
-    app_config['JSONSCHEMAS_ENDPOINT'] = '/schema'
-    app_config['JSONSCHEMAS_HOST'] = 'localhost:5000'
-    app_config['RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY'] = None
-    app_config['CIRCULATION_ITEM_EXISTS'] = lambda x: True
-    app_config['CIRCULATION_PATRON_EXISTS'] = lambda x: True
-    app_config['CIRCULATION_REST_PERMISSION_FACTORIES'] = dict(
+    app_config["SERVER_NAME"] = "localhost:5000"
+    app_config["JSONSCHEMAS_ENDPOINT"] = "/schema"
+    app_config["JSONSCHEMAS_HOST"] = "localhost:5000"
+    app_config["RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY"] = None
+    app_config["CIRCULATION_ITEM_EXISTS"] = lambda x: True
+    app_config["CIRCULATION_PATRON_EXISTS"] = lambda x: True
+    app_config["CIRCULATION_REST_PERMISSION_FACTORIES"] = dict(
         loanid=dict(create_permission_factory_imp=allow_all)
     )
     return app_config
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def create_app():
     """Flask application fixture."""
     def _create_app(**kwargs):
-        app = Flask('test')
+        app = Flask("test")
         app.config.update(kwargs)
         return app
+
     return _create_app
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def base_app(base_app):
     """Flask base application fixture."""
-    base_app.url_map.converters['pid'] = PIDConverter
+    base_app.url_map.converters["pid"] = PIDConverter
     InvenioDB(base_app)
     InvenioRecords(base_app)
     InvenioRecordsREST(base_app)
@@ -84,35 +85,33 @@ def loan_created(db):
 def params():
     """."""
     return dict(
-        transaction_user_pid='user_pid',
-        patron_pid='patron_pid',
-        item_pid='item_pid',
-        transaction_location_pid='loc_pid',
-        transaction_date='2018-02-01T09:30:00+02:00',
+        transaction_user_pid="user_pid",
+        patron_pid="patron_pid",
+        item_pid="item_pid",
+        transaction_location_pid="loc_pid",
+        transaction_date="2018-02-01T09:30:00+02:00",
     )
 
 
 @pytest.yield_fixture()
 def loan_schema():
     """Loan Json schema."""
-    yield {
-        '$schema': 'http://localhost:5000/schema/loans/loan-v1.0.0.json'
-    }
+    yield {"$schema": "http://localhost:5000/schema/loans/loan-v1.0.0.json"}
 
 
 @pytest.fixture()
 def json_headers(app):
     """JSON headers."""
     return [
-        ('Content-Type', 'application/json'),
-        ('Accept', 'application/json'),
+        ("Content-Type", "application/json"),
+        ("Accept", "application/json"),
     ]
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(scope="session")
 def test_data():
     """Load test records."""
-    path = 'data/loans.json'
+    path = "data/loans.json"
     with open(join(dirname(__file__), path)) as fp:
         loans = json.load(fp)
     yield loans
@@ -139,14 +138,19 @@ def indexed_loans(indexer, test_loans):
     """Get a function to wait for records to be flushed to index."""
     for pid, loan in test_loans:
         indexer.index_by_id(loan.id)
-    current_search.flush_and_refresh(index='loans')
+    current_search.flush_and_refresh(index="loans")
+
     yield test_loans
+
+    for pid, loan in test_loans:
+        indexer.delete_by_id(loan.id)
+    current_search.flush_and_refresh(index="loans")
 
 
 @pytest.yield_fixture()
 def mock_is_item_available():
     """Mock item_available check."""
-    path = 'invenio_circulation.transitions.base.is_item_available'
+    path = "invenio_circulation.transitions.base.is_item_available"
     with mock.patch(path) as mock_is_item_available:
-            mock_is_item_available.return_value = True
-            yield mock_is_item_available
+        mock_is_item_available.return_value = True
+        yield mock_is_item_available
