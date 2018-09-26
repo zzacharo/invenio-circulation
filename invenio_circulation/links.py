@@ -17,7 +17,7 @@ from .views import build_url_action_for_pid
 def loan_links_factory(pid, record=None):
     """Factory for links generation."""
     links = {}
-    record = record or Loan.get_record(pid.object_uuid)
+    record = record or Loan.get_record_by_pid(pid.pid_value)
     available_actions = {}
     transitions_config = current_app.config.get(
         'CIRCULATION_LOAN_TRANSITIONS', {}
