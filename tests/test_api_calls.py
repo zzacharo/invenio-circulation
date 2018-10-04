@@ -132,3 +132,30 @@ def test_api_loans_links_factory(app, db, json_headers, params,
         assert res.status_code == 200
         loan_dict = json.loads(res.data.decode('utf-8'))
         assert loan_dict['links'] == expected_links
+
+
+def test_api_circulation_status(app, db, json_headers, indexed_loans):
+    """Test API GET call to check circulation state."""
+    pending_item_pid = "item_pending_1"
+    not_loaned_item_pid = "item_not_loaned"
+    multiple_loans_pid = "item_multiple_pending_on_loan_7"
+
+    with app.test_client() as client:
+        # one pending load
+        url = url_for('invenio_circulation_state.state_resource',
+                      pid_value=pending_item_pid)
+        res = client.get(url, headers=json_headers)
+        res_json = json.loads(res.data.decode('utf-8'))
+        assert res_json == {}
+        # no loans found
+        url = url_for('invenio_circulation_state.state_resource',
+                      pid_value=not_loaned_item_pid)
+        res = client.get(url, headers=json_headers)
+        res_json = json.loads(res.data.decode('utf-8'))
+        assert res_json == {}
+        # multiple loans
+        url = url_for('invenio_circulation_state.state_resource',
+                      pid_value=multiple_loans_pid)
+        res = client.get(url, headers=json_headers)
+        res_json = json.loads(res.data.decode('utf-8'))
+        assert res_json['metadata']['item_pid'] == multiple_loans_pid

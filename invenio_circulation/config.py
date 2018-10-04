@@ -131,8 +131,8 @@ CIRCULATION_REST_ENDPOINTS = dict(
             'application/json': ('invenio_records_rest.serializers'
                                  ':json_v1_search'),
         },
-        list_route='/circulation/loan/',
-        item_route='/circulation/loan/<{0}:pid_value>'.format(_Loan_PID),
+        list_route='/circulation/loans/',
+        item_route='/circulation/loans/<{0}:pid_value>'.format(_Loan_PID),
         default_media_type='application/json',
         links_factory_imp=loan_links_factory,
         max_result_window=10000,

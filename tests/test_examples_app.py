@@ -53,6 +53,6 @@ def test_example_app_get_loan(example_app):
     exit_status = subprocess.call(cmd, shell=True)
     assert exit_status == 0
 
-    cmd = 'curl http://localhost:5000/circulation/loan/1'
+    cmd = 'curl http://localhost:5000/circulation/loans/1'
     output = subprocess.check_output(cmd, shell=True)
     assert b'metadata' in output

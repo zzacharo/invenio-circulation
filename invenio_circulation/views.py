@@ -10,7 +10,7 @@
 
 from copy import deepcopy
 
-from flask import Blueprint, current_app, request, url_for
+from flask import Blueprint, current_app, jsonify, request, url_for
 from invenio_db import db
 from invenio_records_rest.utils import obj_or_import_string
 from invenio_records_rest.views import \
@@ -19,9 +19,12 @@ from invenio_records_rest.views import pass_record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.views import create_api_errorhandler
 
-from invenio_circulation.errors import InvalidCirculationPermission, \
-    ItemNotAvailable, LoanActionError, NoValidTransitionAvailable
 from invenio_circulation.proxies import current_circulation
+from invenio_circulation.search import LoansSearch
+
+from .api import Loan
+from .errors import InvalidCirculationPermission, ItemNotAvailable, \
+    LoanActionError, NoValidTransitionAvailable
 
 HTTP_CODES = {
     'method_not_allowed': 405,
@@ -64,6 +67,7 @@ def build_blueprint_with_loan_actions(app):
         __name__,
         url_prefix='',
     )
+
     create_error_handlers(blueprint)
 
     endpoints = app.config.get('CIRCULATION_REST_ENDPOINTS', [])
@@ -137,3 +141,65 @@ class LoanActionResource(ContentNegotiatedMethodView):
             pid, record, HTTP_CODES['accepted'],
             links_factory=self.links_factory
         )
+
+
+def build_blueprint_with_state(app):
+    """Item circulation state blueprint."""
+    blueprint = Blueprint(
+        'invenio_circulation_state',
+        __name__,
+        url_prefix='',
+    )
+
+    create_error_handlers(blueprint)
+
+    rec_serializers = {
+        "application/json": (
+            "invenio_records_rest.serializers" ":json_v1_response"
+        )
+    }
+    serializers = {
+        mime: obj_or_import_string(func)
+        for mime, func in rec_serializers.items()
+    }
+
+    from invenio_circulation.links import loan_links_factory
+    loan_request = StateResource.as_view(
+        StateResource.view_name, serializers=serializers,
+        ctx=dict(links_factory=loan_links_factory),
+    )
+
+    url = 'circulation/items/<pid_value>/status'
+
+    blueprint.add_url_rule(
+        url, view_func=loan_request, methods=["GET"]
+    )
+    return blueprint
+
+
+class StateResource(ContentNegotiatedMethodView):
+    """Item circulation state resource."""
+
+    view_name = 'state_resource'
+
+    def __init__(self, serializers, ctx, *args, **kwargs):
+        """Resource view contructor."""
+        super(StateResource, self).__init__(serializers, *args, **kwargs)
+        for key, value in ctx.items():
+            setattr(self, key, value)
+
+    def get(self, *args, **kwargs):
+        """Handle GET request for item state."""
+        loans = list(LoansSearch.search_loans_by_pid(
+            item_pid=kwargs.get('pid_value', None),
+            filter_states=['ITEM_ON_LOAN']))
+        if loans:
+            loan = Loan.get_record_by_pid(loans[0].loanid)
+
+            from invenio_circulation.pid.fetchers import loan_pid_fetcher
+            loan_pid = loan_pid_fetcher(loan.id, loan)
+            return self.make_response(
+                loan_pid, loan, 200,
+                links_factory=self.links_factory
+            )
+        return jsonify({})
