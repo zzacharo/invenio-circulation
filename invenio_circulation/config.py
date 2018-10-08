@@ -8,8 +8,9 @@
 
 """Invenio module for the circulation of bibliographic items."""
 
-from invenio_indexer.api import RecordIndexer
 from invenio_records_rest.utils import allow_all
+
+from invenio_circulation.permissions import views_permissions_factory
 
 from .api import Loan
 from .links import loan_links_factory
@@ -141,3 +142,9 @@ CIRCULATION_REST_ENDPOINTS = dict(
     ),
 )
 """REST endpoint configuration for circulation APIs."""
+
+
+# PERMISSIONS
+# ===
+CIRCULATION_VIEWS_PERMISSIONS_FACTORY = views_permissions_factory
+"""Permissions factory for circulation views to handle actions."""

@@ -15,9 +15,11 @@ import uuid
 from flask import current_app
 from invenio_db import db
 from invenio_pidstore import current_pidstore
+from invenio_records_rest.utils import deny_all
 from six.moves import reduce
 
 from invenio_circulation.api import Loan
+from invenio_circulation.permissions import loan_reader
 
 
 class SwappedConfig:
@@ -68,3 +70,11 @@ def create_loan(data):
         pid = current_pidstore.minters['loanid'](rec_uuid, data)
         record = Loan.create(data, id_=rec_uuid)
         return pid, record
+
+
+def test_views_permissions_factory(action):
+    """Test views permissions factory."""
+    if action == 'loan-read-access':
+        return loan_reader()
+    else:
+        return deny_all()

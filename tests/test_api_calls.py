@@ -134,28 +134,51 @@ def test_api_loans_links_factory(app, db, json_headers, params,
         assert loan_dict['links'] == expected_links
 
 
-def test_api_circulation_status(app, db, json_headers, indexed_loans):
-    """Test API GET call to check circulation state."""
+def test_api_circulation_item_loan_pending(app, db, json_headers,
+                                           indexed_loans):
+    """Test API GET call to check item's pending loan."""
     pending_item_pid = "item_pending_1"
-    not_loaned_item_pid = "item_not_loaned"
-    multiple_loans_pid = "item_multiple_pending_on_loan_7"
 
     with app.test_client() as client:
-        # one pending load
-        url = url_for('invenio_circulation_state.state_resource',
+        url = url_for('invenio_circulation_item.loan_resource',
                       pid_value=pending_item_pid)
         res = client.get(url, headers=json_headers)
         res_json = json.loads(res.data.decode('utf-8'))
         assert res_json == {}
-        # no loans found
-        url = url_for('invenio_circulation_state.state_resource',
+        assert res.status_code == 200
+
+
+def test_api_circulation_item_no_loan(app, db, json_headers, indexed_loans):
+    """Test API GET call to check circulation when no loan on the item."""
+    not_loaned_item_pid = "item_not_loaned"
+
+    with app.test_client() as client:
+        url = url_for('invenio_circulation_item.loan_resource',
                       pid_value=not_loaned_item_pid)
         res = client.get(url, headers=json_headers)
         res_json = json.loads(res.data.decode('utf-8'))
         assert res_json == {}
-        # multiple loans
-        url = url_for('invenio_circulation_state.state_resource',
+        assert res.status_code == 200
+
+
+def test_api_circulation_item_on_loan(app, db, json_headers, indexed_loans):
+    """Test API GET call to check circulation item's loan."""
+    multiple_loans_pid = "item_multiple_pending_on_loan_7"
+
+    with app.test_client() as client:
+        url = url_for('invenio_circulation_item.loan_resource',
                       pid_value=multiple_loans_pid)
         res = client.get(url, headers=json_headers)
         res_json = json.loads(res.data.decode('utf-8'))
         assert res_json['metadata']['item_pid'] == multiple_loans_pid
+        assert res.status_code == 200
+
+
+def test_api_circulation_item_not_found(app, db, json_headers, indexed_loans):
+    """Test API GET call to check circulation item not found."""
+
+    with app.test_client() as client:
+        url = url_for('invenio_circulation_item.loan_resource',
+                      pid_value="")
+        res = client.get(url, headers=json_headers)
+        assert res.status_code == 404

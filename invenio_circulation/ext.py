@@ -19,8 +19,8 @@ from . import config
 from .errors import InvalidState, NoValidTransitionAvailable, \
     TransitionConditionsFailed
 from .transitions.base import Transition
-from .views import build_blueprint_with_loan_actions, \
-    build_blueprint_with_state
+from .views import build_blueprint_with_items_loan, \
+    build_blueprint_with_loan_actions
 
 
 class InvenioCirculation(object):
@@ -41,7 +41,7 @@ class InvenioCirculation(object):
         )
         blueprint = build_blueprint_with_loan_actions(app)
         app.register_blueprint(blueprint)
-        app.register_blueprint(build_blueprint_with_state(app))
+        app.register_blueprint(build_blueprint_with_items_loan(app))
         app.extensions["invenio-circulation"] = self
 
     def init_config(self, app):

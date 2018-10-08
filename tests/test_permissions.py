@@ -12,7 +12,6 @@
 import pytest
 from invenio_records_rest.utils import allow_all, deny_all
 
-from invenio_circulation.api import Loan
 from invenio_circulation.errors import InvalidCirculationPermission
 from invenio_circulation.transitions.transitions import CreatedToPending
 

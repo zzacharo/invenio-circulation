@@ -16,7 +16,11 @@ from os.path import dirname, join
 import mock
 import pytest
 from flask import Flask
-from helpers import create_loan
+from flask_security import Security, SQLAlchemyUserDatastore
+from helpers import create_loan, test_views_permissions_factory
+from invenio_access import ActionRoles, InvenioAccess, superuser_access
+from invenio_accounts.models import Role, User
+from invenio_db import db
 from invenio_db.ext import InvenioDB
 from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
@@ -30,6 +34,7 @@ from invenio_search import InvenioSearch, current_search
 
 from invenio_circulation.api import Loan
 from invenio_circulation.ext import InvenioCirculation
+from invenio_circulation.permissions import loan_access
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +53,7 @@ def app_config(app_config):
 def create_app():
     """Flask application fixture."""
     def _create_app(**kwargs):
-        app = Flask("test")
+        app = Flask("test base")
         app.config.update(kwargs)
         return app
 
@@ -59,6 +64,8 @@ def create_app():
 def base_app(base_app):
     """Flask base application fixture."""
     base_app.url_map.converters["pid"] = PIDConverter
+    user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+    Security(base_app, user_datastore)
     InvenioDB(base_app)
     InvenioRecords(base_app)
     InvenioRecordsREST(base_app)
@@ -68,6 +75,7 @@ def base_app(base_app):
     InvenioSearch(base_app)
     InvenioCirculation(base_app)
     InvenioJSONSchemas(base_app)
+    InvenioAccess(base_app)
     base_app.register_blueprint(create_blueprint_from_app(base_app))
     yield base_app
 
@@ -151,3 +159,39 @@ def mock_is_item_available():
     with mock.patch(path) as mock_is_item_available:
         mock_is_item_available.return_value = True
         yield mock_is_item_available
+
+
+@pytest.fixture()
+def users(db, base_app):
+    """Create admin, manager and user."""
+    base_app.config["CIRCULATION_VIEWS_PERMISSIONS_FACTORY"] = \
+        test_views_permissions_factory
+
+    with db.session.begin_nested():
+        datastore = base_app.extensions['security'].datastore
+
+        # create users
+        manager = datastore.create_user(email='manager@test.com',
+                                        password='123456', active=True)
+        admin = datastore.create_user(email='admin@test.com',
+                                      password='123456', active=True)
+        user = datastore.create_user(email='user@test.com',
+                                     password='123456', active=True)
+
+        # Give role to admin
+        admin_role = Role(name='admin')
+        db.session.add(ActionRoles(action=superuser_access.value,
+                                   role=admin_role))
+        datastore.add_role_to_user(admin, admin_role)
+        # Give role to user
+        manager_role = Role(name='manager')
+        db.session.add(ActionRoles(action=loan_access.value,
+                                   role=manager_role))
+        datastore.add_role_to_user(manager, manager_role)
+    db.session.commit()
+
+    return {
+        'admin': admin,
+        'manager': manager,
+        'user': user,
+    }

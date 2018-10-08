@@ -18,7 +18,9 @@ from invenio_records_rest.views import \
 from invenio_records_rest.views import pass_record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.views import create_api_errorhandler
+from werkzeug.exceptions import BadRequest
 
+from invenio_circulation.permissions import need_permissions
 from invenio_circulation.proxies import current_circulation
 from invenio_circulation.search import LoansSearch
 
@@ -28,7 +30,7 @@ from .errors import InvalidCirculationPermission, ItemNotAvailable, \
 
 HTTP_CODES = {
     'method_not_allowed': 405,
-    'accepted': 202
+    'accepted': 202,
 }
 
 
@@ -119,6 +121,7 @@ class LoanActionResource(ContentNegotiatedMethodView):
         for key, value in ctx.items():
             setattr(self, key, value)
 
+    @need_permissions('loan-read-access')
     @pass_record
     def post(self, pid, record, action, **kwargs):
         """Handle loan action."""
@@ -143,10 +146,10 @@ class LoanActionResource(ContentNegotiatedMethodView):
         )
 
 
-def build_blueprint_with_state(app):
+def build_blueprint_with_items_loan(app):
     """Item circulation state blueprint."""
     blueprint = Blueprint(
-        'invenio_circulation_state',
+        'invenio_circulation_item',
         __name__,
         url_prefix='',
     )
@@ -164,12 +167,12 @@ def build_blueprint_with_state(app):
     }
 
     from invenio_circulation.links import loan_links_factory
-    loan_request = StateResource.as_view(
-        StateResource.view_name, serializers=serializers,
+    loan_request = ItemLoanResource.as_view(
+        ItemLoanResource.view_name, serializers=serializers,
         ctx=dict(links_factory=loan_links_factory),
     )
 
-    url = 'circulation/items/<pid_value>/status'
+    url = 'circulation/items/<pid_value>/loan'
 
     blueprint.add_url_rule(
         url, view_func=loan_request, methods=["GET"]
@@ -177,21 +180,25 @@ def build_blueprint_with_state(app):
     return blueprint
 
 
-class StateResource(ContentNegotiatedMethodView):
+class ItemLoanResource(ContentNegotiatedMethodView):
     """Item circulation state resource."""
 
-    view_name = 'state_resource'
+    view_name = 'loan_resource'
 
     def __init__(self, serializers, ctx, *args, **kwargs):
         """Resource view contructor."""
-        super(StateResource, self).__init__(serializers, *args, **kwargs)
+        super(ItemLoanResource, self).__init__(serializers, *args, **kwargs)
         for key, value in ctx.items():
             setattr(self, key, value)
 
+    @need_permissions('loan-read-access')
     def get(self, *args, **kwargs):
         """Handle GET request for item state."""
+        item_pid = kwargs.get('pid_value', None)
+        if not item_pid:
+            raise BadRequest()
         loans = list(LoansSearch.search_loans_by_pid(
-            item_pid=kwargs.get('pid_value', None),
+            item_pid=item_pid,
             filter_states=['ITEM_ON_LOAN']))
         if loans:
             loan = Loan.get_record_by_pid(loans[0].loanid)
