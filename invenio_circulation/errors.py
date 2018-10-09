@@ -43,3 +43,7 @@ class InvalidCirculationPermission(CirculationException):
 
 class TransitionConstraintsViolation(CirculationException):
     """Exception raised when constraints for the transition failed."""
+
+
+class MultipleLoansOnItemError(CirculationException):
+    """Exception raised when more than one loan on an item."""

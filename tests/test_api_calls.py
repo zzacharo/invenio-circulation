@@ -10,9 +10,14 @@
 
 import json
 
+import pytest
 from flask import url_for
+from helpers import create_loan
+from invenio_indexer.api import RecordIndexer
+from invenio_search import current_search
 
 from invenio_circulation.api import Loan
+from invenio_circulation.errors import MultipleLoansOnItemError
 from invenio_circulation.pid.fetchers import loan_pid_fetcher
 from invenio_circulation.pid.minters import loan_pid_minter
 from invenio_circulation.proxies import current_circulation
@@ -182,3 +187,34 @@ def test_api_circulation_item_not_found(app, db, json_headers, indexed_loans):
                       pid_value="")
         res = client.get(url, headers=json_headers)
         assert res.status_code == 404
+
+
+def test_multiple_active_loans(app, db, json_headers, indexed_loans,
+                               test_loans):
+    """
+    Test if MultipleLoansOnItemError raised when more
+    than one loan is active on the item.
+    """
+    multiple_loans_pid = "item_multiple_pending_on_loan_7"
+
+    test_loan_data = {
+        "item_pid": "item_multiple_pending_on_loan_7",
+        "patron_pid": "2",
+        "state": "ITEM_ON_LOAN",
+        "transaction_date": "2018-06-26",
+        "transaction_location_pid": "loc_pid",
+        "transaction_user_pid": "user_pid",
+        "start_date": "2018-07-24",
+        "end_date": "2018-08-23"
+    }
+
+    pid, loan = create_loan(test_loan_data)
+    db.session.commit()
+    RecordIndexer().index(loan)
+    current_search.flush_and_refresh(index="loans")
+
+    with pytest.raises(MultipleLoansOnItemError):
+        with app.test_client() as client:
+            url = url_for('invenio_circulation_item.loan_resource',
+                          pid_value=multiple_loans_pid)
+            res = client.get(url, headers=json_headers)

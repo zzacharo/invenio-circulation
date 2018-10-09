@@ -26,7 +26,7 @@ from invenio_circulation.search import LoansSearch
 
 from .api import Loan
 from .errors import InvalidCirculationPermission, ItemNotAvailable, \
-    LoanActionError, NoValidTransitionAvailable
+    LoanActionError, MultipleLoansOnItemError, NoValidTransitionAvailable
 
 HTTP_CODES = {
     'method_not_allowed': 405,
@@ -199,8 +199,14 @@ class ItemLoanResource(ContentNegotiatedMethodView):
             raise BadRequest()
         loans = list(LoansSearch.search_loans_by_pid(
             item_pid=item_pid,
-            filter_states=['ITEM_ON_LOAN']))
+            filter_states=['ITEM_ON_LOAN',
+                           'ITEM_AT_DESK',
+                           'ITEM_IN_TRANSIT_FOR_PICKUP',
+                           'ITEM_IN_TRANSIT_TO_HOUSE']))
         if loans:
+            if len(loans) > 1:
+                raise MultipleLoansOnItemError(
+                    "Multiple active loans on item {0}".format(item_pid))
             loan = Loan.get_record_by_pid(loans[0].loanid)
 
             from invenio_circulation.pid.fetchers import loan_pid_fetcher
