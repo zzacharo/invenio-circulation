@@ -177,13 +177,10 @@ class ItemAtDeskToItemOnLoan(Transition):
         """Validate checkout action."""
         super(ItemAtDeskToItemOnLoan, self).before(loan, **kwargs)
 
-        self.ensure_item_is_available(loan)
-
         if loan.get('start_date'):
             loan['start_date'] = parse_date(loan['start_date'])
         if loan.get('end_date'):
             loan['end_date'] = parse_date(loan['end_date'])
-
         _ensure_valid_loan_duration(loan)
 
     def after(self, loan):

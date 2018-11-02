@@ -56,8 +56,8 @@ def is_item_available(item_pid):
     if not cfg_item_available(item_pid):
         return False
 
-    search = search_by_pid(item_pid=item_pid, exclude_states=config.get(
-        "CIRCULATION_STATES_ITEM_AVAILABLE"))
+    search = search_by_pid(item_pid=item_pid, filter_states=config.get(
+        "CIRCULATION_STATES_LOAN_ACTIVE"))
     return search.execute().hits.total == 0
 
 
@@ -106,19 +106,14 @@ def get_loan_for_item(item_pid):
 
     search = search_by_pid(
         item_pid=item_pid,
-        filter_states=[
-            'ITEM_ON_LOAN',
-            'ITEM_AT_DESK',
-            'ITEM_IN_TRANSIT_FOR_PICKUP',
-            'ITEM_IN_TRANSIT_TO_HOUSE'
-        ]
+        filter_states=current_app.config["CIRCULATION_STATES_LOAN_ACTIVE"]
     )
 
     hits = list(search.scan())
     if hits:
         if len(hits) > 1:
             raise MultipleLoansOnItemError(
-                    "Multiple active loans on item {0}".format(item_pid))
+                "Multiple active loans on item {0}".format(item_pid))
 
         loan = Loan.get_record_by_pid(hits[0][Loan.pid_field])
     return loan
@@ -126,20 +121,15 @@ def get_loan_for_item(item_pid):
 
 def patron_has_active_loan_on_item(patron_pid, item_pid):
     """Return True if patron has a pending or active Loan for given item."""
+    config = current_app.config
     if not patron_pid or not item_pid:
         raise CirculationException("Patron PID or Item PID not specified")
 
     search = search_by_patron_item(
         patron_pid=patron_pid,
         item_pid=item_pid,
-        filter_states=[
-            'CREATED',
-            'PENDING',
-            'ITEM_ON_LOAN',
-            'ITEM_AT_DESK',
-            'ITEM_IN_TRANSIT_FOR_PICKUP',
-            'ITEM_IN_TRANSIT_TO_HOUSE'
-            'ITEM_ON_LOAN'
-        ])
+        filter_states=['CREATED', 'PENDING'] +
+        config["CIRCULATION_STATES_LOAN_ACTIVE"]
+    )
     search_result = search.execute()
     return search_result.hits.total > 0

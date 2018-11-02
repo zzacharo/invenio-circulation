@@ -13,6 +13,7 @@ from datetime import timedelta
 import mock
 import pytest
 from flask import current_app
+from flask_security import login_user
 
 from invenio_circulation.api import Loan, is_item_available
 from invenio_circulation.errors import ItemNotAvailable, \
@@ -307,7 +308,7 @@ def test_checkin_end_date_is_transaction_date(
 
 def test_item_availability(indexed_loans):
     """Test item_availability with various conditions."""
-    assert not is_item_available(item_pid="item_pending_1")
+    assert is_item_available(item_pid="item_pending_1")
     assert not is_item_available(item_pid="item_on_loan_2")
     assert is_item_available(item_pid="item_returned_3")
     assert not is_item_available(item_pid="item_in_transit_4")
@@ -332,6 +333,62 @@ def test_checkout_on_unavailable_item(
 
         loan = current_circulation.circulation.trigger(
             loan_created, **dict(params)
+        )
+
+
+def _loan_steps_created_to_on_loan(loan_created, params):
+    """Go step by step through all the transitions"""
+
+    # loan created
+    loan = current_circulation.circulation.trigger(
+        loan_created, **dict(params, trigger="request")
+    )
+
+    # loan pending
+    loan = current_circulation.circulation.trigger(
+        loan_created, **dict(params, trigger="next")
+    )
+
+    # item at desk
+    loan = current_circulation.circulation.trigger(
+        loan_created, **dict(params)
+    )
+
+
+def test_checkout_item(loan_created, db, params, mock_is_item_available,
+                       users, app):
+    """Test standard checkout procedure."""
+    login_user(users['user'])
+    # set specific loan owner
+    params["patron_pid"] = "3"
+    _loan_steps_created_to_on_loan(loan_created, params)
+
+
+def test_checkout_item_unavailable_steps(loan_created, db, params,
+                                         mock_is_item_available,
+                                         users, app):
+    """Test checkout attempt on unavailable item."""
+    user = users['manager']
+    login_user(user)
+    with pytest.raises(NoValidTransitionAvailable):
+        # loan created
+        loan = current_circulation.circulation.trigger(
+            loan_created, **dict(params, trigger="request")
+        )
+
+        # loan pending
+        loan = current_circulation.circulation.trigger(
+            loan_created, **dict(params, trigger="next")
+        )
+
+        loan_created["state"] = "ITEM_ON_LOAN"
+        loan = current_circulation.circulation.trigger(
+            loan_created, **dict(params)
+        )
+
+        # trying to checkout item already on loan
+        loan = current_circulation.circulation.trigger(
+            loan_created, **dict(params, trigger="checkout")
         )
 
 

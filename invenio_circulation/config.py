@@ -32,11 +32,15 @@ CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT = None
 CIRCULATION_DOCUMENT_RETRIEVER_FROM_ITEM = None
 """Function that returns the Document PID of a given Item PID."""
 
-CIRCULATION_STATES_ITEM_AVAILABLE = ['ITEM_RETURNED', 'CANCELLED']
-"""Defines the list of Loan states for which an Item is considered loanable.
+CIRCULATION_STATES_LOAN_ACTIVE = ['ITEM_AT_DESK',
+                                  'ITEM_ON_LOAN',
+                                  'ITEM_IN_TRANSIT_FOR_PICKUP',
+                                  'ITEM_IN_TRANSIT_TO_HOUSE',
+                                  ]
+"""Defines the list of Loan states for which a Loan is considered as active.
 
-Only Items that have these circulation statuses are available and loanable
-by patrons."""
+Items that have attached loans with these circulation statuses are
+not available to be loaned by patrons."""
 
 CIRCULATION_LOAN_TRANSITIONS_DEFAULT_PERMISSION_FACTORY = allow_all
 """Default permission factory for all Loans transitions."""
