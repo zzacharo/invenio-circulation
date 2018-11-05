@@ -255,5 +255,5 @@ class ItemInTransitHouseToItemReturned(Transition):
 
     def after(self, loan):
         """Convert dates to string before saving loan."""
-        super(ItemOnLoanToItemReturned, self).after(loan)
+        super(ItemInTransitHouseToItemReturned, self).after(loan)
         _update_document_pending_request_for_item(loan['item_pid'])
