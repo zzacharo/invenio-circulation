@@ -17,8 +17,9 @@ from .pidstore.pids import CIRCULATION_LOAN_FETCHER, CIRCULATION_LOAN_MINTER, \
     CIRCULATION_LOAN_PID_TYPE
 from .search.api import LoansSearch
 from .transitions.transitions import CreatedToPending, \
-    ItemInTransitHouseToItemReturned, ItemOnLoanToItemInTransitHouse, \
-    ItemOnLoanToItemOnLoan, ItemOnLoanToItemReturned, PendingToItemAtDesk, \
+    ItemAtDeskToItemOnLoan, ItemInTransitHouseToItemReturned, \
+    ItemOnLoanToItemInTransitHouse, ItemOnLoanToItemOnLoan, \
+    ItemOnLoanToItemReturned, PendingToItemAtDesk, \
     PendingToItemInTransitPickup, ToItemOnLoan
 from .utils import get_default_extension_duration, \
     get_default_extension_max_count, get_default_loan_duration, \
@@ -57,7 +58,7 @@ CIRCULATION_LOAN_TRANSITIONS = {
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_AT_DESK': [
-        dict(dest='ITEM_ON_LOAN', transition=ToItemOnLoan),
+        dict(dest='ITEM_ON_LOAN', transition=ItemAtDeskToItemOnLoan),
         dict(dest='CANCELLED', trigger='cancel')
     ],
     'ITEM_IN_TRANSIT_FOR_PICKUP': [

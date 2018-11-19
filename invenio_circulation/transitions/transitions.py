@@ -110,6 +110,22 @@ class ToItemOnLoan(Transition):
         super(ToItemOnLoan, self).after(loan)
 
 
+class ItemAtDeskToItemOnLoan(ToItemOnLoan):
+    """Check-out action to perform a loan when item ready at desk."""
+
+    def before(self, loan, **kwargs):
+        """Validate checkout action."""
+        super(ToItemOnLoan, self).before(loan, **kwargs)
+
+        if loan.get('start_date'):
+            loan['start_date'] = parse_date(loan['start_date'])
+
+        if loan.get('end_date'):
+            loan['end_date'] = parse_date(loan['end_date'])
+
+        _ensure_valid_loan_duration(loan)
+
+
 class CreatedToPending(Transition):
     """Action to request to loan an item."""
 

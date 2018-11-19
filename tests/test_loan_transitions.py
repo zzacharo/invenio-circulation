@@ -353,9 +353,10 @@ def _loan_steps_created_to_on_loan(loan_created, params):
     loan = current_circulation.circulation.trigger(
         loan_created, **dict(params)
     )
+    assert loan_created["state"] == "ITEM_ON_LOAN"
 
 
-def test_checkout_item(loan_created, db, params, mock_is_item_available,
+def test_checkout_item(loan_created, db, params,
                        users, app):
     """Test standard checkout procedure."""
     login_user(users['user'])
@@ -365,7 +366,6 @@ def test_checkout_item(loan_created, db, params, mock_is_item_available,
 
 
 def test_checkout_item_unavailable_steps(loan_created, db, params,
-                                         mock_is_item_available,
                                          users, app):
     """Test checkout attempt on unavailable item."""
     user = users['manager']
