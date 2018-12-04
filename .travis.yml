@@ -41,12 +41,7 @@ env:
 
 python:
   - "2.7"
-  - "3.6"
-
-addons:
-  apt:
-    packages:
-      - graphviz
+  - "3.5"
 
 before_install:
   - "mkdir /tmp/elasticsearch"
@@ -71,13 +66,13 @@ after_success:
   - coveralls
 
 deploy:
+  distributions: sdist bdist_wheel
+  on:
+    condition: $DEPLOY = true
+    python: '3.5'
+    repo: inveniosoftware/invenio-circulation
+    tags: true
+  password:
+    secure: 0AV0IlCIHu6/4OL9LQvLvR9T8CWm1luBRbOhpiNhQfM7O5SWmpMHFUoCee5D23XxYabCzen/qS0yQeuz6MyW5eO6WM56KigWjI43Hx0/284GI+irnR9+P8aJYA1MIwg7ug9aRts73yd5/u+HJ5IAxEyzTf6ilzFRErgU0VQVcdaOgTRrqQlYA+d9xnHthw9UXtdJUFjqapGmibfPV/YoP2O6ReVahNcgzWSO4wosiAlqy5IHqM/x7EJ81BNHrNVF4ZXKe2y24k1uV8LmCZN7aEQKaLWZNxLpZNaEv+QKAhvmhSlJMh086kzr+Fs7xDXiAZW9x3xVGL908ZlQyzBkJbNE1UUL4KOa2IcSu/Sfpl9zZCQpH8mD/wnjsSIWQ0j3fZPyLBaSSKLUvH3Pr7NLbr1xnQjEILPW3vgNOGbKl/8X4X46Ziact6rf4tIr6IctqzdfYem0FEYhhpBIFTrYtzTGBf5AQfnr2+x3D2ixk89Wy42UzYqwiZMXUMC3eVayrbYEpn7aYeGbinz84D2xSSYVuagtghKxl8wy1+anUbuWEhkS9rJMLK9BLQAuh41+M3kRcS1788CZw0wB7UzgcWUWy7yYP4X2bbVnzUnBPsxhHhkFIGXRSfTdABVGvCVmBDEvwAVbdPb5YrreowS4phfHhseTvOXv56rn4UAaFLI=
   provider: pypi
   user: inveniosoftware
-  password:
-    secure: TODO:PYPISECUREHASH
-  distributions: "compile_catalog sdist bdist_wheel"
-  on:
-    tags: true
-    python: "2.7"
-    repo: inveniosoftware/invenio-circulation
-    condition: $DEPLOY = true
