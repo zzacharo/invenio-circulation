@@ -132,7 +132,6 @@ CIRCULATION_REST_ENDPOINTS = dict(
         item_route='/circulation/loans/<{0}:pid_value>'.format(
             _LOANID_CONVERTER),
         default_media_type='application/json',
-        links_factory_imp=loan_links_factory,
         max_result_window=10000,
         error_handlers=dict(),
         create_permission_factory_imp=allow_all

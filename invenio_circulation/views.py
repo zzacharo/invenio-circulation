@@ -32,80 +32,72 @@ from .proxies import current_circulation
 
 logger = logging.getLogger(__name__)
 
-HTTP_CODES = {
-    'bad_request': 400,
-    'accepted': 202,
-}
+HTTP_CODES = {"bad_request": 400, "accepted": 202}
 
 
 def create_error_handlers(blueprint):
     """Create error handlers on blueprint."""
-    blueprint.errorhandler(CirculationException)(create_api_errorhandler(
-        status=HTTP_CODES['bad_request'], message='Invalid loan action'
-    ))
+    blueprint.errorhandler(CirculationException)(
+        create_api_errorhandler(
+            status=HTTP_CODES["bad_request"], message="Invalid loan action"
+        )
+    )
     records_rest_error_handlers(blueprint)
 
 
 def extract_transitions_from_app(app):
     """Return all possible actions for configured transitions."""
-    transitions_config = app.config.get('CIRCULATION_LOAN_TRANSITIONS', {})
+    transitions_config = app.config.get("CIRCULATION_LOAN_TRANSITIONS", {})
     distinct_actions = set()
     for src_state, transitions in transitions_config.items():
         for t in transitions:
-            distinct_actions.add(t.get('trigger', 'next'))
+            distinct_actions.add(t.get("trigger", "next"))
     return distinct_actions
 
 
 def build_url_action_for_pid(pid, action):
     """Build urls for Loan actions."""
     return url_for(
-        'invenio_circulation_loan_actions.{0}_actions'.format(pid.pid_type),
+        "invenio_circulation_loan_actions.{0}_actions".format(pid.pid_type),
         pid_value=pid.pid_value,
         action=action,
-        _external=True
+        _external=True,
     )
 
 
 def create_loan_actions_blueprint(app):
     """Create a blueprint for Loan actions."""
     blueprint = Blueprint(
-        'invenio_circulation_loan_actions',
-        __name__,
-        url_prefix='',
+        "invenio_circulation_loan_actions", __name__, url_prefix=""
     )
 
     create_error_handlers(blueprint)
 
-    endpoints = app.config.get('CIRCULATION_REST_ENDPOINTS', [])
+    endpoints = app.config.get("CIRCULATION_REST_ENDPOINTS", [])
     pid_type = CIRCULATION_LOAN_PID_TYPE
     options = endpoints.get(pid_type, {})
     if options:
         options = deepcopy(options)
         serializers = {}
-        if 'record_serializers' in options:
-            rec_serializers = options.get('record_serializers')
-            serializers = {mime: obj_or_import_string(func)
-                           for mime, func in rec_serializers.items()}
+        if "record_serializers" in options:
+            rec_serializers = options.get("record_serializers")
+            serializers = {
+                mime: obj_or_import_string(func)
+                for mime, func in rec_serializers.items()
+            }
 
         loan_actions = LoanActionResource.as_view(
             LoanActionResource.view_name.format(pid_type),
             serializers=serializers,
-            ctx=dict(
-                links_factory=app.config.get('CIRCULATION_LOAN_LINKS_FACTORY')
-            ),
+            ctx={}
         )
 
         distinct_actions = extract_transitions_from_app(app)
-        url = '{0}/<any({1}):action>'.format(
-            options['item_route'],
-            ','.join(distinct_actions),
+        url = "{0}/<any({1}):action>".format(
+            options["item_route"], ",".join(distinct_actions)
         )
 
-        blueprint.add_url_rule(
-            url,
-            view_func=loan_actions,
-            methods=['POST'],
-        )
+        blueprint.add_url_rule(url, view_func=loan_actions, methods=["POST"])
 
     return blueprint
 
@@ -113,19 +105,15 @@ def create_loan_actions_blueprint(app):
 class LoanActionResource(ContentNegotiatedMethodView):
     """Loan action resource."""
 
-    view_name = '{0}_actions'
+    view_name = "{0}_actions"
 
     def __init__(self, serializers, ctx, *args, **kwargs):
         """Constructor."""
-        super(LoanActionResource, self).__init__(
-            serializers,
-            *args,
-            **kwargs
-        )
+        super(LoanActionResource, self).__init__(serializers, *args, **kwargs)
         for key, value in ctx.items():
             setattr(self, key, value)
 
-    @need_permissions('loan-actions')
+    @need_permissions("loan-actions")
     @pass_record
     def post(self, pid, record, action, **kwargs):
         """Handle loan action."""
@@ -139,23 +127,25 @@ class LoanActionResource(ContentNegotiatedMethodView):
         except (
             ItemNotAvailable,
             InvalidCirculationPermission,
-            NoValidTransitionAvailable
+            NoValidTransitionAvailable,
         ) as ex:
             current_app.logger.exception(ex.msg)
             raise LoanActionError(ex)
 
         return self.make_response(
-            pid, record, HTTP_CODES['accepted'],
-            links_factory=self.links_factory
+            pid,
+            record,
+            HTTP_CODES["accepted"],
+            links_factory=current_app.config.get(
+                "CIRCULATION_LOAN_LINKS_FACTORY"
+            ),
         )
 
 
 def create_loan_for_item_blueprint(app):
     """Create a blueprint for Loan status of Items."""
     blueprint = Blueprint(
-        'invenio_circulation_loan_for_item',
-        __name__,
-        url_prefix='',
+        "invenio_circulation_loan_for_item", __name__, url_prefix=""
     )
 
     create_error_handlers(blueprint)
@@ -170,24 +160,20 @@ def create_loan_for_item_blueprint(app):
         for mime, func in rec_serializers.items()
     }
 
-    loan_links_factory = app.config.get('CIRCULATION_LOAN_LINKS_FACTORY')
     loan_request = ItemLoanResource.as_view(
-        ItemLoanResource.view_name, serializers=serializers,
-        ctx=dict(links_factory=loan_links_factory),
+        ItemLoanResource.view_name, serializers=serializers, ctx={}
     )
 
-    url = 'circulation/items/<pid_value>/loan'
+    url = "circulation/items/<pid_value>/loan"
 
-    blueprint.add_url_rule(
-        url, view_func=loan_request, methods=["GET"]
-    )
+    blueprint.add_url_rule(url, view_func=loan_request, methods=["GET"])
     return blueprint
 
 
 class ItemLoanResource(ContentNegotiatedMethodView):
     """Item circulation state resource."""
 
-    view_name = 'loan_resource'
+    view_name = "loan_resource"
 
     def __init__(self, serializers, ctx, *args, **kwargs):
         """Resource view constructor."""
@@ -195,10 +181,10 @@ class ItemLoanResource(ContentNegotiatedMethodView):
         for key, value in ctx.items():
             setattr(self, key, value)
 
-    @need_permissions('loan-read-access')
+    @need_permissions("loan-read-access")
     def get(self, *args, **kwargs):
         """Handle GET request for item state."""
-        item_pid = kwargs.get('pid_value', None)
+        item_pid = kwargs.get("pid_value", None)
         if not item_pid:
             raise BadRequest()
 
@@ -211,8 +197,12 @@ class ItemLoanResource(ContentNegotiatedMethodView):
         if loan:
             loan_pid = loan_pid_fetcher(loan.id, loan)
             return self.make_response(
-                loan_pid, loan, 200,
-                links_factory=self.links_factory
+                loan_pid,
+                loan,
+                200,
+                links_factory=current_app.config.get(
+                    "CIRCULATION_LOAN_LINKS_FACTORY"
+                ),
             )
 
         return jsonify({})
