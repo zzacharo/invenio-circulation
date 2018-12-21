@@ -39,6 +39,10 @@ class InvenioCirculation(object):
         self.init_config(app)
         app.config.setdefault("RECORDS_REST_ENDPOINTS", {})
 
+        app.config["CIRCULATION_REST_ENDPOINTS"].setdefault("loanid", {})[
+            "links_factory_imp"
+        ] = app.config["CIRCULATION_LOAN_LINKS_FACTORY"]
+
         app.config["RECORDS_REST_ENDPOINTS"].update(
             app.config["CIRCULATION_REST_ENDPOINTS"]
         )
