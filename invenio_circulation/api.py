@@ -33,7 +33,9 @@ class Loan(Record):
     def create(cls, data, id_=None, **kwargs):
         """Create Loan record."""
         data["$schema"] = current_jsonschemas.path_to_url(cls._schema)
-        if current_app.config.get("CIRCULATION_ITEM_REF_BUILDER"):
+        ref_builder = current_app.config.get("CIRCULATION_ITEM_REF_BUILDER")
+        item_attached = data.get("item_pid") and data["item_pid"] != ""
+        if ref_builder and item_attached:
             data["item"] = current_app.config["CIRCULATION_ITEM_REF_BUILDER"](
                 data["item_pid"]
             )
