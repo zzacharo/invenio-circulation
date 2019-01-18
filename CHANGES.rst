@@ -7,6 +7,11 @@
 Changes
 =======
 
+
+Version 1.0.0a2 (released 2019-01-18)
+
+- Adding support for creating a reference inside `Loan` record to an item.
+
 Version 1.0.0a1 (released 2018-12-04)
 
 - Initial public release.
