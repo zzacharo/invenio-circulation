@@ -64,7 +64,7 @@ from invenio_circulation.config import CIRCULATION_REST_ENDPOINTS
 from invenio_circulation.ext import InvenioCirculation
 from invenio_circulation.pidstore.minters import loan_pid_minter
 from invenio_circulation.views import create_loan_actions_blueprint, \
-    create_loan_for_item_blueprint
+    create_loan_for_item_blueprint, create_loan_replace_item_blueprint
 
 # Create Flask application
 app = Flask(__name__)
@@ -90,6 +90,7 @@ InvenioCirculation(app)
 app.register_blueprint(create_blueprint_from_app(app))
 app.register_blueprint(create_loan_actions_blueprint(app))
 app.register_blueprint(create_loan_for_item_blueprint(app))
+app.register_blueprint(create_loan_replace_item_blueprint(app))
 
 
 @app.cli.group()

@@ -55,7 +55,7 @@ def login_required(*args, **kwargs):
 
 
 def views_permissions_factory(action):
-    """Default circulation views permissions factory."""
+    """Circulation views permissions factory."""
     if action == 'loan-read-access':
         return allow_all()
     elif action == 'loan-actions':

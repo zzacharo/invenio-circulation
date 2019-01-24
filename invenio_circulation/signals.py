@@ -17,3 +17,10 @@ loan_state_changed = _signals.signal('loan-state-changed')
 
 Its is broadcasted when a loan transitions to a different state.
 """
+
+loan_replace_item = _signals.signal('loan-replace-item')
+"""Loan item changed signal.
+
+Its is broadcasted when the item in a Loan is replaced, sending the old and the
+new item_pid.
+"""

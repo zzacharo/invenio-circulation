@@ -51,7 +51,7 @@ def ensure_same_item_patron(f):
 
 
 def ensure_required_params(f):
-    """Decorator to ensure that all required parameters has been passed."""
+    """Decorate to ensure that all required parameters has been passed."""
     def inner(self, loan, **kwargs):
         missing = [p for p in self.REQUIRED_PARAMS if p not in kwargs]
         if missing:
@@ -67,7 +67,7 @@ def ensure_required_params(f):
 
 
 def check_trigger(f):
-    """Decorator to check the transition should be manually triggered."""
+    """Decorate to check the transition should be manually triggered."""
     def inner(self, loan, **kwargs):
         if kwargs.get('trigger', 'next') != self.trigger:
             msg = 'No param `trigger` with value `{0}`.'.format(self.trigger)

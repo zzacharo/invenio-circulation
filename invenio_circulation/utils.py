@@ -28,9 +28,10 @@ def is_item_available(item_pid):
     return True
 
 
-def item_resolver(item_pid):
-    """Return the item record for the passed item pid."""
-    return ""
+# NOTE: Its on purpose `ref` and not `$ref` so it doesn't try to resolve
+def item_ref_builder(item_pid):
+    """Return the $ref for item_pid."""
+    return {"ref": "{}".format(item_pid)}
 
 
 def item_location_retriever(item_pid):

@@ -73,7 +73,6 @@ def test_loan_request(loan_created, db, params):
 
 def test_loan_extend(loan_created, db, params, mock_is_item_available):
     """Test loan extend action."""
-
     def get_max_count_1(loan):
         return 1
 
@@ -109,7 +108,6 @@ def test_loan_extend_from_enddate(
     loan_created, db, params, mock_is_item_available
 ):
     """Test loan extend action from transaction date."""
-
     loan = current_circulation.circulation.trigger(
         loan_created, **dict(params, trigger="checkout")
     )

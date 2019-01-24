@@ -130,7 +130,7 @@ class CreatedToPending(Transition):
     """Action to request to loan an item."""
 
     def check_request_on_document(f):
-        """Decorator to check if the request is on document."""
+        """Decorate to check if the request is on document."""
         def inner(self, loan, **kwargs):
             document_pid = kwargs.get('document_pid')
             if document_pid and not kwargs.get('item_pid'):

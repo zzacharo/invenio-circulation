@@ -13,8 +13,8 @@ from invenio_records_rest.utils import allow_all
 from .api import Loan
 from .links import loan_links_factory
 from .permissions import views_permissions_factory
-from .pidstore.pids import CIRCULATION_LOAN_FETCHER, CIRCULATION_LOAN_MINTER, \
-    CIRCULATION_LOAN_PID_TYPE
+from .pidstore.pids import _LOANID_CONVERTER, CIRCULATION_LOAN_FETCHER, \
+    CIRCULATION_LOAN_MINTER, CIRCULATION_LOAN_PID_TYPE
 from .search.api import LoansSearch
 from .transitions.transitions import CreatedToPending, \
     ItemAtDeskToItemOnLoan, ItemInTransitHouseToItemReturned, \
@@ -24,7 +24,7 @@ from .transitions.transitions import CreatedToPending, \
 from .utils import get_default_extension_duration, \
     get_default_extension_max_count, get_default_loan_duration, \
     is_item_available, is_loan_duration_valid, item_exists, \
-    item_location_retriever, item_resolver, patron_exists
+    item_location_retriever, item_ref_builder, patron_exists
 
 CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT = None
 """Function that returns a list of item PIDs given a Document PID."""
@@ -92,7 +92,7 @@ CIRCULATION_PATRON_EXISTS = patron_exists
 CIRCULATION_ITEM_EXISTS = item_exists
 """Function that returns True if the given Item exists."""
 
-CIRCULATION_ITEM_REF_BUILDER = None
+CIRCULATION_ITEM_REF_BUILDER = item_ref_builder
 """Function that builds $ref to an `Item` record."""
 
 CIRCULATION_ITEM_LOCATION_RETRIEVER = item_location_retriever
@@ -117,9 +117,6 @@ CIRCULATION_POLICIES = dict(
     ),
 )
 """Default circulation policies when performing an action on a Loan."""
-
-_LOANID_CONVERTER = 'pid(loanid,record_class="invenio_circulation.api:Loan")'
-"""Loan PID url converter."""
 
 CIRCULATION_REST_ENDPOINTS = dict(
     loanid=dict(

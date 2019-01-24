@@ -19,7 +19,7 @@ from invenio_records_rest.views import \
 from invenio_records_rest.views import pass_record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.views import create_api_errorhandler
-from werkzeug.exceptions import BadRequest, InternalServerError
+from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from .api import get_loan_for_item
 from .errors import CirculationException, InvalidCirculationPermission, \
@@ -27,8 +27,9 @@ from .errors import CirculationException, InvalidCirculationPermission, \
     NoValidTransitionAvailable
 from .permissions import need_permissions
 from .pidstore.fetchers import loan_pid_fetcher
-from .pidstore.pids import CIRCULATION_LOAN_PID_TYPE
+from .pidstore.pids import _LOANID_CONVERTER, CIRCULATION_LOAN_PID_TYPE
 from .proxies import current_circulation
+from .signals import loan_replace_item
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +90,7 @@ def create_loan_actions_blueprint(app):
         loan_actions = LoanActionResource.as_view(
             LoanActionResource.view_name.format(pid_type),
             serializers=serializers,
-            ctx={}
+            ctx={},
         )
 
         distinct_actions = extract_transitions_from_app(app)
@@ -206,3 +207,97 @@ class ItemLoanResource(ContentNegotiatedMethodView):
             )
 
         return jsonify({})
+
+
+def create_loan_replace_item_blueprint(app):
+    """Create a blueprint for replacing Loan Item."""
+    blueprint = Blueprint(
+        "invenio_circulation_loan_replace_item", __name__, url_prefix=""
+    )
+
+    create_error_handlers(blueprint)
+    rec_serializers = {
+        "application/json": (
+            "invenio_records_rest.serializers" ":json_v1_response"
+        )
+    }
+    serializers = {
+        mime: obj_or_import_string(func)
+        for mime, func in rec_serializers.items()
+    }
+    replace_item_view = LoanReplaceItemResource.as_view(
+        LoanReplaceItemResource.view_name.format(CIRCULATION_LOAN_PID_TYPE),
+        serializers=serializers,
+        ctx={},
+    )
+
+    url = "circulation/loans/<{0}:pid_value>/replace-item".format(
+        _LOANID_CONVERTER
+    )
+    blueprint.add_url_rule(url, view_func=replace_item_view, methods=["POST"])
+    return blueprint
+
+
+def validate_replace_item(loan, data):
+    """Validate data before replacing an item in loan."""
+    active_states = current_app.config["CIRCULATION_STATES_LOAN_ACTIVE"]
+    if loan["state"] not in active_states:
+        raise BadRequest("Cannot replace item in a loan that is not active.")
+
+    item_pid = data.get("item_pid")
+    if not item_pid:
+        raise BadRequest("Invalid request data, an item_pid is required.")
+
+    item_exists = current_app.config.get("CIRCULATION_ITEM_EXISTS")(item_pid)
+    if not item_exists:
+        raise NotFound("No item found with item_pid: {}".format(item_pid))
+
+
+def loan_update(loan, data):
+    """Update loan with new properties."""
+    item_ref_builder = current_app.config.get("CIRCULATION_ITEM_REF_BUILDER")
+    item_pid = data.get("item_pid")
+    loan["item_pid"] = item_pid
+    loan["item"] = item_ref_builder(item_pid)
+    return loan
+
+
+class LoanReplaceItemResource(ContentNegotiatedMethodView):
+    """Loan update resource."""
+
+    view_name = "loan_replace_item_resource"
+
+    def __init__(self, serializers, ctx, *args, **kwargs):
+        """Constructor."""
+        super(LoanReplaceItemResource, self).__init__(
+            serializers, *args, **kwargs
+        )
+        for key, value in ctx.items():
+            setattr(self, key, value)
+
+    @need_permissions("loan-actions")
+    @pass_record
+    def post(self, pid, record, *args, **kwargs):
+        """Handle POST request to update loan with new item."""
+        old_item_pid = record["item_pid"]
+        data = request.get_json()
+        validate_replace_item(record, data)
+        record = loan_update(record, data)
+        db.session.commit()
+
+        current_circulation.loan_indexer.index(record)
+        if old_item_pid:
+            loan_replace_item.send(
+                self,
+                old_item_pid=old_item_pid,
+                new_item_pid=record["item_pid"]
+            )
+
+        return self.make_response(
+            pid,
+            record,
+            HTTP_CODES["accepted"],
+            links_factory=current_app.config.get(
+                "CIRCULATION_LOAN_LINKS_FACTORY"
+            ),
+        )

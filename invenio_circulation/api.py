@@ -85,7 +85,7 @@ def get_pending_loans_by_doc_pid(document_pid):
 
 
 def get_available_item_by_doc_pid(document_pid):
-    """Returns an item pid available for this document."""
+    """Return an item pid available for this document."""
     for item_pid in get_items_by_doc_pid(document_pid):
         if is_item_available(item_pid):
             return item_pid
@@ -93,7 +93,7 @@ def get_available_item_by_doc_pid(document_pid):
 
 
 def get_items_by_doc_pid(document_pid):
-    """Returns a list of item pids for this document."""
+    """Return a list of item pids for this document."""
     return current_app.config["CIRCULATION_ITEMS_RETRIEVER_FROM_DOCUMENT"](
         document_pid
     )

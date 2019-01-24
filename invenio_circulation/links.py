@@ -15,7 +15,7 @@ from .views import build_url_action_for_pid
 
 
 def loan_links_factory(pid, record=None):
-    """Factory for links generation."""
+    """Generate links for loan."""
     links = {}
     record = record or Loan.get_record_by_pid(pid.pid_value)
     actions = {}

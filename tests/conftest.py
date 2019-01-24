@@ -61,7 +61,7 @@ def loan_created(app):
 
 @pytest.fixture()
 def params():
-    """Common API REST payload."""
+    """Params for API REST payload."""
     return dict(
         transaction_user_pid="user_pid",
         patron_pid="patron_pid",

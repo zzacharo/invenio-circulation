@@ -122,6 +122,9 @@ setup(
             'invenio_circulation.views:create_loan_actions_blueprint',
             'invenio_circulation_loan_for_item = '
             'invenio_circulation.views:create_loan_for_item_blueprint',
+            'invenio_circulation_loan_replace_item = '
+            'invenio_circulation.views:create_loan_replace_item_blueprint',
+
         ],
         'invenio_i18n.translations': ['messages = invenio_circulation'],
         'invenio_pidstore.fetchers': [
