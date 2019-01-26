@@ -7,6 +7,10 @@
 Changes
 =======
 
+Version 1.0.0a4 (released 2019-01-26)
+
+- Loan replace item endpoint.
+
 Version 1.0.0a3 (released 2019-01-18)
 
 - Creating item reference only when item pid is attached.
