@@ -42,6 +42,12 @@ CIRCULATION_STATES_LOAN_ACTIVE = ['ITEM_AT_DESK',
 Items that have attached loans with these circulation statuses are
 not available to be loaned by patrons."""
 
+CIRCULATION_STATES_LOAN_COMPLETED = ['ITEM_RETURNED']
+"""Defines the list of states that a loan is considered completed.
+
+Loans with these states are considered as valid past loans for the item they
+refer to."""
+
 CIRCULATION_LOAN_TRANSITIONS_DEFAULT_PERMISSION_FACTORY = allow_all
 """Default permission factory for all Loans transitions."""
 
