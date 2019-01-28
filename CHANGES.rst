@@ -7,6 +7,10 @@
 Changes
 =======
 
+Version 1.0.0a5 (released 2019-01-28)
+
+- Add config for defining loan `completed` state.
+
 Version 1.0.0a4 (released 2019-01-26)
 
 - Loan replace item endpoint.
