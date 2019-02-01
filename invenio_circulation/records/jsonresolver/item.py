@@ -14,7 +14,7 @@ from werkzeug.routing import Rule
 
 @jsonresolver.hookimpl
 def jsonresolver_loader(url_map):
-    """Resolve the OpenAIRE grant."""
+    """Resolve the item reference."""
     from flask import current_app
     resolving_path = current_app.config.get(
         "CIRCULATION_ITEM_RESOLVING_PATH") or "/"
